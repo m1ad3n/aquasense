@@ -11,7 +11,7 @@
 //
 // circle related macros
 //
-#define PI 3.149514
-#define AREA(r) (PI*(r)*(r))
+#define PI 3.141592
+#define CIRCLE_AREA(r) (PI*(r)*(r))
 
 #endif
