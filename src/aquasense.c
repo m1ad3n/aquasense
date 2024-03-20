@@ -6,6 +6,7 @@
 
 #include "deps.h"
 #include "macros.h"
+#include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
 /**
@@ -19,6 +20,23 @@ static void error_callback(int error, const char* description)
     fprintf(stderr, "GLFW ERROR: %s\n", description);
 }
 
+/**
+ * Vertex data for the triangle
+ */
+float positions[6] = {
+    -0.5f, -0.5f,
+     0.0f,  0.5f,
+     0.5f, -0.5f
+};
+
+/**
+ * @brief      main function (_start)
+ *
+ * @param[in]  argc  The count of arguments
+ * @param      argv  The arguments array
+ *
+ * @return     exit status
+ */
 int main(int argc, char *argv[]) {
     glfwSetErrorCallback(error_callback);
 
@@ -42,10 +60,22 @@ int main(int argc, char *argv[]) {
     // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
+    // generating a vertex buffer and binding it
+    unsigned int buffer;
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_ARRAY_BUFFER, buffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float), NULL);
+
     // main application loop
     while (!glfwWindowShouldClose(window)) {
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor(1.0, 1.0, 1.0, 1.0);
+
+        glColor3f(0.0, 0.0, 1.0);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // glfw stuff
         glfwSwapBuffers(window);
