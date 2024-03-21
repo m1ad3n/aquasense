@@ -1,0 +1,28 @@
+#!/bin/sh
+
+BUILD_DIR="build"
+
+[ ! -d "$BUILD_DIR" ] && mkdir -p "$BUILD_DIR"
+cd "$BUILD_DIR"
+
+cmake ..
+
+if [ $? -eq 0 ]; then
+	make
+
+	if [ "$1" = "run" ]; then
+		EFILE=$(find . -maxdepth 1 -type f -executable | head -n 1)
+		if [ -n "$EFILE" ]; then
+			./"$EFILE"
+
+		else
+			echo "== EXECUTABLE FILE NOT FOUND =="
+		
+		fi
+
+	fi
+
+else
+	echo "== CMAKE BUILD FAILED =="
+
+fi
