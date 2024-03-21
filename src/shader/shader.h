@@ -3,7 +3,7 @@
 
 #include "../deps.h"
 
-#define MAX_PATH 50
+#define MAX_PATH 128
 
 typedef struct {
     unsigned int ID;
@@ -19,5 +19,8 @@ void sShader_setInt(const sShader* shader, const char* name, int value);
 void sShader_setFloat(const sShader* shader, const char* name, float value);
 void sShader_setVec4(const sShader* shader, const char* name, float values[4]);
 void sShader_destroy(sShader* shader);
+void sShader_checkCompileErrors(unsigned int shader, const char* type);
+
+char* sReadDataFromFile(const char* _path);
 
 #endif

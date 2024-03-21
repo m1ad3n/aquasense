@@ -50,7 +50,7 @@ float positions[12] = {
  * Triangle color data
  */
 float colors[4] = {
-    1.0f, 0.0f, 0.0f, 1.0f
+    1.0f, 0.0f, 1.0f, 1.0f
 };
 
 /**
@@ -62,6 +62,7 @@ float colors[4] = {
  * @return     exit status
  */
 int main(int argc, char *argv[]) {
+
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -99,7 +100,7 @@ int main(int argc, char *argv[]) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
     // create and compile vertex and fragment shaders
-    sShader* sMainShader = sShader_new("./resources/FragmentShader.frag", "./resources/VertexShader.vert");
+    sShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
 
     // check if all went well
     if (!sMainShader)
@@ -130,7 +131,7 @@ glfw_cleanup_and_exit:
     glfwTerminate();
 
     // message for developers
-    printf("GLFW: Window memory successfully released\n");
+    printf("GLFW: Window memory released\n");
 
     // exit status
     return EXIT_SUCCESS;
