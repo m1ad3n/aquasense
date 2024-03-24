@@ -67,9 +67,6 @@ void sShader_checkCompileErrors(unsigned int shader, const char* type) {
 sShader* sShader_new(const char* _vpath, const char* _fpath) {
     sShader* shader = (sShader*)malloc(sizeof(sShader));
 
-    strcpy(shader->vertex_path, _vpath);
-    strcpy(shader->fragment_path, _fpath);
-
     char* vertexCode = sReadDataFromFile(_vpath);
     char* fragmentCode = sReadDataFromFile(_fpath);
 

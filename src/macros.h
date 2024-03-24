@@ -1,12 +1,18 @@
 #ifndef AQUASENSE_MACROS
 #define AQUASENSE_MACROS
 
-//
-// printf related macros
-//
-#define ERROR(PREFIX, MESSAGE) fprintf(stderr, "%s %s\n", PREFIX, MESSAGE)
-#define GLFW_ERROR(MESSAGE) ERROR("GLFW ERROR:", MESSAGE)
-#define OPENGL_ERROR(MESSAGE) ERROR("OPENGL ERROR:", MESSAGE)
+#include "deps.h"
+#include <stdio.h>
+
+// OpenGL ERRORS
+extern inline void GLClearErrors() {
+	while (glGetError() != GL_NO_ERROR);
+}
+
+extern inline void GLCheckError() {
+	unsigned int code = glGetError();
+	if (code) printf("[OPENGL ERROR][%d]\n", code);
+}
 
 //
 // circle related macros

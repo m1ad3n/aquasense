@@ -7,6 +7,7 @@
 #include "deps.h"
 #include "macros.h"
 #include "shader/shader.h"
+#include "buffers/vertex_buffer.h"
 
 /**
  * @brief      Error callback function for GLFW
@@ -89,19 +90,15 @@ int main(int argc, char *argv[]) {
     // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
-    // generating a vertex buffer and binding it
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertecies), vertecies, GL_STATIC_DRAW);
+    // creating a vertex buffer
+    VertexBuffer* vbo = sBuffer_new(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
+    if (!vbo) goto glfw_cleanup_and_exit;
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
-    unsigned int ibuff;
-    glGenBuffers(1, &ibuff);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibuff);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
+    IndexBuffer* ibo = sBuffer_new(GL_ELEMENT_ARRAY_BUFFER, indicies, sizeof(indicies));
+    if (!ibo) goto glfw_cleanup_and_exit;
 
     // create and compile vertex and fragment shaders
     sShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
@@ -118,9 +115,11 @@ int main(int argc, char *argv[]) {
         sShader_use(sMainShader);
         sShader_setVec4(sMainShader, "ell_color", colors);
 
+        GLClearErrors();
         glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+        GLCheckError();
 
-        // glfw stuff
+        // glfw swap front and back buffers
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

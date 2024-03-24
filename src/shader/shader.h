@@ -7,8 +7,6 @@
 
 typedef struct {
     unsigned int ID;
-    char vertex_path[MAX_PATH];
-    char fragment_path[MAX_PATH];
 } sShader;
 
 sShader* sShader_new(const char* _vpath, const char* _fpath);
