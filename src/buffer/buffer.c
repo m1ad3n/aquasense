@@ -1,4 +1,4 @@
-#include "vertex_buffer.h"
+#include "buffer.h"
 #include "../deps.h"
 
 struct sBuffer* sBuffer_new(long long _target, void* _data, unsigned int _size) {

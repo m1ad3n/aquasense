@@ -1,7 +1,5 @@
 #include "shader.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../deps.h"
 
 /**
  * @brief      Function that reads data from file
@@ -116,8 +114,8 @@ void sShader_use(const sShader* shader) {
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
  */
-void sShader_setBool(const sShader* shader, const char* name, bool value) {
-    glUniform1i(glGetUniformLocation(shader->ID, name), (int)value);
+void sShader_setBool(const sShader* shader, const char* name, int value) {
+    glUniform1i(glGetUniformLocation(shader->ID, name), value);
 }
 
 /**
