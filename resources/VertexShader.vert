@@ -1,8 +1,7 @@
 #version 330 core
-#extension GL_ARB_separate_shader_objects : require
 
-layout (location = 0) in vec3 aPos;
+layout (location = 0) in vec4 position;
 
 void main() {
-  gl_Position = vec4(aPos, 1.0f);
+  gl_Position = position;
 }

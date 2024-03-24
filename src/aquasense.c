@@ -7,8 +7,6 @@
 #include "deps.h"
 #include "macros.h"
 #include "shader/shader.h"
-#include <GLFW/glfw3.h>
-#include <stdio.h>
 
 /**
  * @brief      Error callback function for GLFW
@@ -40,10 +38,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 /**
  * Vertex data for the triangle
  */
-float positions[12] = {
-    -0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
+float vertecies[8] = {
+    -0.5f, -0.5f, // 0
+     0.5f, -0.5f, // 1
+     0.5f,  0.5f, // 2
+    -0.5f,  0.5f, // 3
+};
+
+unsigned int indicies[3] = {
+    2, 3, 0
 };
 
 /**
@@ -62,7 +65,7 @@ float colors[4] = {
  * @return     exit status
  */
 int main(int argc, char *argv[]) {
-
+    
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -86,18 +89,19 @@ int main(int argc, char *argv[]) {
     // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
-    unsigned int vertex_array_id;
-    glGenVertexArrays(1, &vertex_array_id);
-    glBindVertexArray(vertex_array_id);
-
     // generating a vertex buffer and binding it
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertecies), vertecies, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+
+    unsigned int ibuff;
+    glGenBuffers(1, &ibuff);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibuff);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies, GL_STATIC_DRAW);
 
     // create and compile vertex and fragment shaders
     sShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
@@ -112,10 +116,9 @@ int main(int argc, char *argv[]) {
         glClearColor(0.0, 0.0, 0.0, 1.0);
 
         sShader_use(sMainShader);
-        sShader_setVec4(sMainShader, "color", colors);
+        sShader_setVec4(sMainShader, "ell_color", colors);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        glBindVertexArray(vertex_array_id);
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
 
         // glfw stuff
         glfwSwapBuffers(window);
