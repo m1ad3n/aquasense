@@ -7,7 +7,7 @@
 #include "deps.h"
 #include "macros.h"
 #include "shader/shader.h"
-#include "buffers/vertex_buffer.h"
+#include "buffer/buffer.h"
 
 /**
  * @brief      Error callback function for GLFW
