@@ -62,8 +62,8 @@ void sShader_checkCompileErrors(unsigned int shader, const char* type) {
  *
  * @return     Pointer to a new sShader variable
  */
-sShader* sShader_new(const char* _vpath, const char* _fpath) {
-    sShader* shader = (sShader*)malloc(sizeof(sShader));
+struct sShader* sShader_new(const char* _vpath, const char* _fpath) {
+    struct sShader* shader = (struct sShader*)malloc(sizeof(struct sShader));
 
     char* vertexCode = sReadDataFromFile(_vpath);
     char* fragmentCode = sReadDataFromFile(_fpath);
@@ -103,7 +103,7 @@ sShader* sShader_new(const char* _vpath, const char* _fpath) {
  *
  * @param[in]  shader  The shader
  */
-void sShader_use(const sShader* shader) {
+void sShader_use(const struct sShader* shader) {
     glUseProgram(shader->ID);
 }
 
@@ -114,7 +114,7 @@ void sShader_use(const sShader* shader) {
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
  */
-void sShader_setBool(const sShader* shader, const char* name, int value) {
+void sShader_setBool(const struct sShader* shader, const char* name, int value) {
     glUniform1i(glGetUniformLocation(shader->ID, name), value);
 }
 
@@ -125,7 +125,7 @@ void sShader_setBool(const sShader* shader, const char* name, int value) {
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
  */
-void sShader_setInt(const sShader* shader, const char* name, int value) {
+void sShader_setInt(const struct sShader* shader, const char* name, int value) {
     glUniform1i(glGetUniformLocation(shader->ID, name), value);
 }
 
@@ -136,7 +136,7 @@ void sShader_setInt(const sShader* shader, const char* name, int value) {
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
  */
-void sShader_setFloat(const sShader* shader, const char* name, float value) {
+void sShader_setFloat(const struct sShader* shader, const char* name, float value) {
     glUniform1f(glGetUniformLocation(shader->ID, name), value);
 }
 
@@ -147,7 +147,7 @@ void sShader_setFloat(const sShader* shader, const char* name, float value) {
  * @param[in]  name    The uniform name
  * @param[in]  values  The uniform values
  */
-void sShader_setVec4(const sShader* shader, const char* name, float values[4]) {
+void sShader_setVec4(const struct sShader* shader, const char* name, float values[4]) {
     glUniform4f(glGetUniformLocation(shader->ID, name), values[0], values[1], values[2], values[3]);
 }
 
@@ -156,7 +156,7 @@ void sShader_setVec4(const sShader* shader, const char* name, float values[4]) {
  *
  * @param      shader  The shader
  */
-void sShader_destroy(sShader* shader) {
+void sShader_destroy(struct sShader* shader) {
     glDeleteProgram(shader->ID);
     free(shader);
 }

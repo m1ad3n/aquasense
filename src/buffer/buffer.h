@@ -6,7 +6,6 @@
  */
 typedef struct sBuffer ASBuffer;
 
-
 /**
  * Different names for buffers
  */
@@ -15,7 +14,6 @@ typedef struct sBuffer ASBuffer;
 
 #define IndexBuffer  struct sBuffer
 #define IBuffer      struct sBuffer
-
 
 /**
  * ID     - opengl generated ID

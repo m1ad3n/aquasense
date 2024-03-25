@@ -8,6 +8,34 @@
 #include "macros.h"
 #include "shader/shader.h"
 #include "buffer/buffer.h"
+#include "cvec/cvec.h"
+#include <stdio.h>
+
+/**
+ * Window ptr
+ */
+GLFWwindow* window;
+
+/**
+ * Vertex data for the triangle
+ */
+float vertecies[8] = {
+    -0.5f, -0.5f, // 0
+     0.5f, -0.5f, // 1
+     0.5f,  0.5f, // 2
+    -0.5f,  0.5f, // 3
+};
+
+unsigned int indicies[3] = {
+    2, 3, 0
+};
+
+/**
+ * Triangle color data
+ */
+float colors[4] = {
+    1.0f, 0.0f, 1.0f, 1.0f
+};
 
 /**
  * @brief      Error callback function for GLFW
@@ -37,25 +65,51 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 }
 
 /**
- * Vertex data for the triangle
+ * @brief      Initialize GLFW window
  */
-float vertecies[8] = {
-    -0.5f, -0.5f, // 0
-     0.5f, -0.5f, // 1
-     0.5f,  0.5f, // 2
-    -0.5f,  0.5f, // 3
-};
+static bool asInitGlfw() {
+    if (!glfwInit()) return false;
 
-unsigned int indicies[3] = {
-    2, 3, 0
-};
+    window = glfwCreateWindow(640, 480, "AquaSense", NULL, NULL);
+    if (!window) { glfwTerminate(); return false; }
 
-/**
- * Triangle color data
- */
-float colors[4] = {
-    1.0f, 0.0f, 1.0f, 1.0f
-};
+    glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetErrorCallback(error_callback);
+
+    return true;
+}
+
+static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
+    int id;
+
+    // buffers cleanup
+    if (buffersVec) {
+        for (int i = 0; i < cvec_size(buffersVec); i++)
+            sBuffer_destroy((ASBuffer*)cvec_at(buffersVec, i));
+        fprintf(stdout, "OPENGL BUFFERS: Memory released\n");
+    }
+
+    // shaders cleanup
+    if (shadersVec) {
+        for (int i = 0; i < cvec_size(shadersVec); i++)
+            sShader_destroy((ASShader*)cvec_at(shadersVec, i));
+        fprintf(stdout, "OPENGL SHADERS: Memory released\n");
+    }
+
+    // cleanup glfw window
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    fprintf(stdout, "GLFW: Memory released\n");
+
+    // free the memory
+    cvec_free(buffersVec);
+    cvec_free(shadersVec);
+
+    // terminates the application
+    fprintf(stdout, "AQUASENSE: Goodbye!\n");
+    exit(0);
+}
 
 /**
  * @brief      main function (_start)
@@ -67,24 +121,14 @@ float colors[4] = {
  */
 int main(int argc, char *argv[]) {
     
-    glfwSetErrorCallback(error_callback);
-
-    if (!glfwInit())
-        return -1;
-
-    GLFWwindow* window = glfwCreateWindow(640, 480, "AquaSense", NULL, NULL);
-    if (!window) {
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, key_callback);
+    if (!asInitGlfw()) return -1;
+    else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
     // initializing opengl (glew)
-    int error_code = glewInit();
-    if (error_code != GLEW_OK) {
-        fprintf(stderr, "OPENGL ERROR: something wrong with glewInit()\n");
-        goto glfw_cleanup_and_exit;
+    int glew_error_code = glewInit();
+    if (glew_error_code != GLEW_OK) {
+        fprintf(stderr, "OPENGL ERROR: glewInit() is not working properly\n");
+        cleanupAndExit(NULL, NULL);
     }
 
     // details about opengl
@@ -92,20 +136,17 @@ int main(int argc, char *argv[]) {
 
     // creating a vertex buffer
     VertexBuffer* vbo = sBuffer_new(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
-    if (!vbo) goto glfw_cleanup_and_exit;
+    if (!vbo) cleanupAndExit(NULL, NULL);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
 
     IndexBuffer* ibo = sBuffer_new(GL_ELEMENT_ARRAY_BUFFER, indicies, sizeof(indicies));
-    if (!ibo) goto glfw_cleanup_and_exit;
+    if (!ibo) { cleanupAndExit(cvec_from(1, vbo), NULL); }
 
     // create and compile vertex and fragment shaders
-    sShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
-
-    // check if all went well
-    if (!sMainShader)
-        goto glfw_cleanup_and_exit;
+    ASShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
+    if (!sMainShader) cleanupAndExit(cvec_from(2, vbo, ibo), NULL);
 
     // main application loop
     while (!glfwWindowShouldClose(window)) {
@@ -124,17 +165,6 @@ int main(int argc, char *argv[]) {
         glfwPollEvents();
     }
 
-    sShader_destroy(sMainShader);
-    printf("OPENGL: Shader memory released\n");
-
-glfw_cleanup_and_exit:
-    // glfw memory cleanup 
-    glfwDestroyWindow(window);
-    glfwTerminate();
-
-    // message for developers
-    printf("GLFW: Window memory released\n");
-
-    // exit status
-    return EXIT_SUCCESS;
+    // EXIT
+    cleanupAndExit(cvec_from(2, vbo, ibo), cvec_from(1, sMainShader));
 }

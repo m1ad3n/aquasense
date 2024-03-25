@@ -27,4 +27,5 @@ void sBuffer_destroy(struct sBuffer *svb) {
 	if (svb == NULL) return;
 	glDeleteBuffers(1, &svb->ID);
 	free(svb);
+	svb = NULL;
 }
