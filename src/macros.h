@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 // OpenGL ERRORS
-extern inline void GLClearErrors() {
+extern inline void GLClearErrors() {  
 	while (glGetError() != GL_NO_ERROR);
 }
 

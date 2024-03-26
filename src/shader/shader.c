@@ -12,7 +12,7 @@ char* sReadDataFromFile(const char* _path) {
     FILE* fptr;
     fptr = fopen(_path, "r");
     if (!fptr) {
-        fprintf(stderr, "FILE ERROR: Failed to open file: %s\n", _path);
+        fprintf(stderr, "FILE ERROR: Failed to open %s\n", _path);
         return NULL;
     }
     
@@ -43,13 +43,17 @@ void sShader_checkCompileErrors(unsigned int shader, const char* type) {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            fprintf(stderr, "OPENGL SHADER ERROR: Shader compilation error of type: %s\n%s\n", type, infoLog);
+            fprintf(stderr, "OPENGL SHADER ERROR: Shader compilation error of type: %s\n", type);
+            if (strlen(infoLog) > 0)
+                fprintf(stderr, "%s\n", infoLog);
         }
     } else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            fprintf(stderr, "OPENGL SHADER ERROR: Program linking error of type: %s\n%s\n", type, infoLog);
+            fprintf(stderr, "OPENGL SHADER ERROR: Program linking error of type: %s\n", type);
+            if (strlen(infoLog) > 0)
+                fprintf(stderr, "%s\n", infoLog);
         }
     }
 }

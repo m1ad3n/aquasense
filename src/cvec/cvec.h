@@ -5,9 +5,6 @@
 extern "C" {
 #endif
 
-#define true 1
-#define false 0
-
 typedef struct {
     void** items;
     unsigned int capacity;

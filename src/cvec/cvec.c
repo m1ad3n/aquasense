@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 cvec* cvec_new() {
 	cvec* temp = (cvec*)malloc(sizeof(cvec));
@@ -71,7 +72,7 @@ int cvec_clean(cvec* vec) {
     return true;
 }
 
-static void cvec_debug(cvec* vec, const char* format) {
+void cvec_debug(cvec* vec, const char* format) {
     if (vec->size < 1) {
         printf("[]\n");
         return;

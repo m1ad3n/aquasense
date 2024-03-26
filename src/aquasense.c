@@ -9,7 +9,6 @@
 #include "shader/shader.h"
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
-#include <stdio.h>
 
 /**
  * Window ptr
@@ -26,8 +25,9 @@ float vertecies[8] = {
     -0.5f,  0.5f, // 3
 };
 
-unsigned int indicies[3] = {
-    2, 3, 0
+unsigned int indicies[6] = {
+    1, 2, 3,
+    2, 3, 1
 };
 
 /**
@@ -42,10 +42,11 @@ float colors[4] = {
  *
  * @param[in]  error        The error
  * @param[in]  description  The description
+ * @return     void
  */
 static void error_callback(int error, const char* description)
 {
-    fprintf(stderr, "GLFW ERROR: %s\n", description);
+    fprintf(stderr, "GLFW ERROR [%d]: %s\n", error, description);
 }
 
 /**
@@ -57,7 +58,7 @@ static void error_callback(int error, const char* description)
  * @param[in]  action    The action
  * @param[in]  mods      The mods
  */
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     else if (key == GLFW_KEY_ENTER && action == GLFW_REPEAT)
@@ -66,6 +67,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 /**
  * @brief      Initialize GLFW window
+ * @return     status
  */
 static bool asInitGlfw() {
     if (!glfwInit()) return false;
@@ -80,9 +82,14 @@ static bool asInitGlfw() {
     return true;
 }
 
+/**
+ * @brief      Deallocates all used memory and exits the application
+ *
+ * @param      buffersVec  The buffers vector
+ * @param      shadersVec  The shaders vector
+ * @return     void
+ */
 static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
-    int id;
-
     // buffers cleanup
     if (buffersVec) {
         for (int i = 0; i < cvec_size(buffersVec); i++)
@@ -157,7 +164,7 @@ int main(int argc, char *argv[]) {
         sShader_setVec4(sMainShader, "ell_color", colors);
 
         GLClearErrors();
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, NULL);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
         GLCheckError();
 
         // glfw swap front and back buffers

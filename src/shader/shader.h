@@ -14,7 +14,6 @@ struct sShader {
 };
 
 struct sShader* sShader_new(const char* _vpath, const char* _fpath);
-
 void sShader_use(const struct sShader* shader);
 void sShader_setBool(const struct sShader* shader, const char* name, int value);
 void sShader_setInt(const struct sShader* shader, const char* name, int value);
