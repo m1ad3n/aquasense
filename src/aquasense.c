@@ -10,6 +10,14 @@
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
 
+#ifdef _WIN32
+#   define FRAGMENT_SHADER 	"..\\resources\\FragmentShader.frag"
+#   define VERTEX_SHADER	"..\\resources\\VertexShader.vert"
+#else
+#   define FRAGMENT_SHADER	"../resources/FragmentShader.frag"
+#   define VERTEX_SHADER	"../resources/VertexShader.vert"
+#endif
+
 /**
  * Window ptr
  */
@@ -27,7 +35,7 @@ float vertecies[8] = {
 
 unsigned int indicies[6] = {
     1, 2, 3,
-    2, 3, 1
+    2, 3, 0
 };
 
 /**
@@ -69,10 +77,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
  * @brief      Initialize GLFW window
  * @return     status
  */
-static bool asInitGlfw() {
+static bool asInitGlfw(unsigned short _width, unsigned short _height) {
     if (!glfwInit()) return false;
 
-    window = glfwCreateWindow(640, 480, "AquaSense", NULL, NULL);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(_width, _height, "AquaSense", NULL, NULL);
     if (!window) { glfwTerminate(); return false; }
 
     glfwMakeContextCurrent(window);
@@ -128,7 +140,7 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
  */
 int main(int argc, char *argv[]) {
     
-    if (!asInitGlfw()) return -1;
+    if (!asInitGlfw(640, 480)) return -1;
     else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
     // initializing opengl (glew)
@@ -141,31 +153,42 @@ int main(int argc, char *argv[]) {
     // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
+    // vertex array object
+    unsigned int vao;
+    GLCall(glGenVertexArrays(1, &vao));
+    GLCall(glBindVertexArray(vao));
+
     // creating a vertex buffer
     VertexBuffer* vbo = sBuffer_new(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
     if (!vbo) cleanupAndExit(NULL, NULL);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+    GLCall(glEnableVertexAttribArray(0));
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
 
-    IndexBuffer* ibo = sBuffer_new(GL_ELEMENT_ARRAY_BUFFER, indicies, sizeof(indicies));
+    IndexBuffer* ibo = sIndexBuffer_new(indicies, 6);
     if (!ibo) { cleanupAndExit(cvec_from(1, vbo), NULL); }
 
     // create and compile vertex and fragment shaders
-    ASShader* sMainShader = sShader_new("../resources/VertexShader.vert", "../resources/FragmentShader.frag");
+    ASShader* sMainShader = sShader_new(VERTEX_SHADER, FRAGMENT_SHADER);
     if (!sMainShader) cleanupAndExit(cvec_from(2, vbo, ibo), NULL);
+
+    // unbind everything
+    glBindVertexArray(0);
+    glUseProgram(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     // main application loop
     while (!glfwWindowShouldClose(window)) {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0, 0.0, 0.0, 1.0);
+        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+        GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
 
         sShader_use(sMainShader);
         sShader_setVec4(sMainShader, "ell_color", colors);
 
-        GLClearErrors();
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
-        GLCheckError();
+        // now we need to bind only the vertex array object
+        glBindVertexArray(vao);
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL));
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);

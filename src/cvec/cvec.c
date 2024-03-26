@@ -47,7 +47,7 @@ int cvec_insert(cvec* vec, unsigned int index, void* item) {
 	}
 
 	cvec_resize(vec, (vec->size + 1) + sizeof(item));
-	for (int i = vec->size; i > index; i--)
+	for (unsigned int i = vec->size; i > index; i--)
 		vec->items[i] = vec->items[i - 1];
 	vec->items[index] = item;
 	vec->size++;
@@ -57,7 +57,7 @@ int cvec_insert(cvec* vec, unsigned int index, void* item) {
 
 int cvec_remove(cvec* vec, unsigned int index) {
     if (!vec || vec->size <= index || vec->size < 1) return false;
-    for (int i = index; i < vec->size - 1; i++)
+    for (unsigned int i = index; i < vec->size - 1; i++)
         vec->items[i] = vec->items[i + 1];
 
     vec->size--;
@@ -79,7 +79,7 @@ void cvec_debug(cvec* vec, const char* format) {
     }
 
     printf("[");
-    for (int i = 0; i < vec->size - 1; i++) {
+    for (unsigned int i = 0; i < vec->size - 1; i++) {
         printf(format, vec->items[i]);
         printf(" ");
     }
@@ -124,14 +124,14 @@ int cvec_pop(cvec* vec) {
 	return true;
 }
 
-void* cvec_at(cvec* vec, int index) {
+void* cvec_at(cvec* vec, unsigned int index) {
     if (!vec || vec->size <= index) return NULL;
 	return vec->items[index];
 }
 
 void* cvec_iter(cvec* vec) {
     if (vec->size < 1) return NULL;
-	static int count = 0;
+	static unsigned int count = 0;
 	if (count >= vec->size)
 		count = 0;
 

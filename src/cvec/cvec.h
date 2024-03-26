@@ -1,6 +1,16 @@
+/**
+ * @author Mladen Stanimirovic
+ * @file cvec.h
+ *
+ * @brief Header file containing cvec struct (vector implementation in c)
+ */
+
 #ifndef CVEC_H
 #define CVEC_H
 
+/**
+ * C++ support
+ */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,10 +34,13 @@ int cvec_size(cvec* vec);
 int cvec_free(cvec* vec);
 
 void* cvec_iter(cvec* vec);
-void* cvec_at(cvec* vec, int index);
+void* cvec_at(cvec* vec, unsigned int index);
 void* cvec_front(cvec* vec);
 void* cvec_back(cvec* vec);
 
+/**
+ * End for C++ support
+ */
 #ifdef __cplusplus
 }
 #endif // __cplusplus

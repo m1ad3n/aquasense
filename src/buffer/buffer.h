@@ -1,5 +1,12 @@
-#ifndef AQUASENSE_VERTEX_BUFFER
-#define AQUASENSE_VERTEX_BUFFER
+/**
+ * @author Mladen Stanimirovic
+ * @file buffer.h
+ *
+ * @brief Header file containing buffer structs and buffer releated functions
+ */
+
+#ifndef AQUASENSE_BUFFER
+#define AQUASENSE_BUFFER
 
 /**
  * ASBuffer - AquaSense Buffer
@@ -15,13 +22,15 @@ typedef struct sBuffer ASBuffer;
 #define IndexBuffer  struct sBuffer
 #define IBuffer      struct sBuffer
 
+#define sIndexBuffer_new(data, count) sBuffer_new(GL_ELEMENT_ARRAY_BUFFER, data, count * sizeof(unsigned int))
+
 /**
  * ID     - opengl generated ID
  * TARGET - (GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, ...)
  */
 struct sBuffer {
 	unsigned int ID;
-	long long TARGET;
+	unsigned int TARGET;
 };
 
 /**
@@ -33,7 +42,7 @@ struct sBuffer {
  *
  * @return     A reference to a new buffer
  */
-struct sBuffer* sBuffer_new(long long _target, void* _data, unsigned int _size);
+struct sBuffer* sBuffer_new(unsigned int _target, void* _data, unsigned int _size);
 
 /**
  * @brief      Instructs OpenGL to utilize this buffer

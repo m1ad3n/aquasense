@@ -35,6 +35,8 @@ char* sReadDataFromFile(const char* _path) {
  *
  * @param[in]  shader  The shader ID
  * @param[in]  type    The shader type
+ *
+ * @return     void
  */
 void sShader_checkCompileErrors(unsigned int shader, const char* type) {
     int success;
@@ -106,6 +108,7 @@ struct sShader* sShader_new(const char* _vpath, const char* _fpath) {
  * @brief      Tells OpenGL to use the given shader
  *
  * @param[in]  shader  The shader
+ * @return     void
  */
 void sShader_use(const struct sShader* shader) {
     glUseProgram(shader->ID);
@@ -117,6 +120,8 @@ void sShader_use(const struct sShader* shader) {
  * @param[in]  shader  The shader
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
+ *
+ * @return     void
  */
 void sShader_setBool(const struct sShader* shader, const char* name, int value) {
     glUniform1i(glGetUniformLocation(shader->ID, name), value);
@@ -128,6 +133,8 @@ void sShader_setBool(const struct sShader* shader, const char* name, int value) 
  * @param[in]  shader  The shader
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
+ *
+ * @return     void
  */
 void sShader_setInt(const struct sShader* shader, const char* name, int value) {
     glUniform1i(glGetUniformLocation(shader->ID, name), value);
@@ -139,6 +146,8 @@ void sShader_setInt(const struct sShader* shader, const char* name, int value) {
  * @param[in]  shader  The shader
  * @param[in]  name    The uniform name
  * @param[in]  value   The uniform value
+ *
+ * @return     void
  */
 void sShader_setFloat(const struct sShader* shader, const char* name, float value) {
     glUniform1f(glGetUniformLocation(shader->ID, name), value);
@@ -150,6 +159,8 @@ void sShader_setFloat(const struct sShader* shader, const char* name, float valu
  * @param[in]  shader  The shader
  * @param[in]  name    The uniform name
  * @param[in]  values  The uniform values
+ *
+ * @return     void
  */
 void sShader_setVec4(const struct sShader* shader, const char* name, float values[4]) {
     glUniform4f(glGetUniformLocation(shader->ID, name), values[0], values[1], values[2], values[3]);
@@ -159,6 +170,7 @@ void sShader_setVec4(const struct sShader* shader, const char* name, float value
  * @brief      Tells OpenGL to remove given shader and deallocate its memory 
  *
  * @param      shader  The shader
+ * @return     void
  */
 void sShader_destroy(struct sShader* shader) {
     glDeleteProgram(shader->ID);
