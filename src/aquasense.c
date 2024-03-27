@@ -10,14 +10,6 @@
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
 
-#ifdef _WIN32
-#   define FRAGMENT_SHADER 	"..\\resources\\FragmentShader.frag"
-#   define VERTEX_SHADER	"..\\resources\\VertexShader.vert"
-#else
-#   define FRAGMENT_SHADER	"../resources/FragmentShader.frag"
-#   define VERTEX_SHADER	"../resources/VertexShader.vert"
-#endif
-
 /**
  * Window ptr
  */
@@ -26,23 +18,33 @@ GLFWwindow* window;
 /**
  * Vertex data for the triangle
  */
-float vertecies[8] = {
+float square_vertecies[8] = {
     -0.5f, -0.5f, // 0
      0.5f, -0.5f, // 1
      0.5f,  0.5f, // 2
     -0.5f,  0.5f, // 3
 };
 
-unsigned int indicies[6] = {
+unsigned int square_indicies[6] = {
     1, 2, 3,
     2, 3, 0
+};
+
+float triangle_vertecies[6] = {
+    -0.9f, -0.9f,
+    0.0f, -0.5f,
+    0.9f, -0.9f,
 };
 
 /**
  * Triangle color data
  */
-float colors[4] = {
-    1.0f, 0.0f, 1.0f, 1.0f
+float square_colors[4] = {
+    1.0f, 0.0f, 0.0f, 1.0f
+};
+
+float triangle_colors[4] = {
+    0.0f, 1.0f, 0.0f, 0.0f
 };
 
 /**
@@ -119,7 +121,7 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
     // cleanup glfw window
     glfwDestroyWindow(window);
     glfwTerminate();
-    fprintf(stdout, "GLFW: Memory released\n");
+    fprintf(stdout, "GLFW: Window memory released\n");
 
     // free the memory
     cvec_free(buffersVec);
@@ -139,7 +141,6 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
  * @return     exit status
  */
 int main(int argc, char *argv[]) {
-    
     if (!asInitGlfw(640, 480)) return -1;
     else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
@@ -154,24 +155,37 @@ int main(int argc, char *argv[]) {
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
     // vertex array object
-    unsigned int vao;
-    GLCall(glGenVertexArrays(1, &vao));
-    GLCall(glBindVertexArray(vao));
+    unsigned int square_vao;
+    GLCall(glGenVertexArrays(1, &square_vao));
+    GLCall(glBindVertexArray(square_vao));
 
     // creating a vertex buffer
-    VertexBuffer* vbo = sBuffer_new(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
-    if (!vbo) cleanupAndExit(NULL, NULL);
+    VertexBuffer* square_vbo = sBuffer_new(GL_ARRAY_BUFFER, square_vertecies, sizeof(square_vertecies));
+    if (!square_vbo) cleanupAndExit(NULL, NULL);
 
     GLCall(glEnableVertexAttribArray(0));
     GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
 
-    IndexBuffer* ibo = sIndexBuffer_new(indicies, 6);
-    if (!ibo) { cleanupAndExit(cvec_from(1, vbo), NULL); }
+    IndexBuffer* square_ibo = sIndexBuffer_new(square_indicies, 6);
+    if (!square_ibo) { cleanupAndExit(cvec_from(1, square_vbo), NULL); }
 
     // create and compile vertex and fragment shaders
-    ASShader* sMainShader = sShader_new(VERTEX_SHADER, FRAGMENT_SHADER);
-    if (!sMainShader) cleanupAndExit(cvec_from(2, vbo, ibo), NULL);
+    ASShader* sSquareShader = sShader_new("D:\\aquasense\\resources\\Square.shader");
+    if (!sSquareShader) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL);
 
+    unsigned int triangle_vao;
+    GLCall(glGenVertexArrays(1, &triangle_vao));
+    GLCall(glBindVertexArray(triangle_vao));
+
+    VertexBuffer* triangle_vbo = sBuffer_new(GL_ARRAY_BUFFER, triangle_vertecies, sizeof(triangle_vertecies));
+    if (!triangle_vbo) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
+
+    GLCall(glEnableVertexAttribArray(0));
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
+
+    ASShader* sTriangleShader = sShader_new("D:\\aquasense\\resources\\Triangle.shader");
+    if (!sTriangleShader) cleanupAndExit(cvec_from(3, square_vbo, square_indicies, triangle_vbo), cvec_from(1, sSquareShader));
+    
     // unbind everything
     glBindVertexArray(0);
     glUseProgram(0);
@@ -183,12 +197,17 @@ int main(int argc, char *argv[]) {
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
 
-        sShader_use(sMainShader);
-        sShader_setVec4(sMainShader, "ell_color", colors);
+        sShader_use(sSquareShader);
+        sShader_setVec4(sSquareShader, "square_color", square_colors);
 
         // now we need to bind only the vertex array object
-        glBindVertexArray(vao);
+        GLCall(glBindVertexArray(square_vao));
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL));
+
+        sShader_use(sTriangleShader);
+        sShader_setVec4(sTriangleShader, "triangle_color", triangle_colors);
+        GLCall(glBindVertexArray(triangle_vao));
+        GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);
@@ -196,5 +215,5 @@ int main(int argc, char *argv[]) {
     }
 
     // EXIT
-    cleanupAndExit(cvec_from(2, vbo, ibo), cvec_from(1, sMainShader));
+    cleanupAndExit(cvec_from(3, square_vbo, square_ibo, triangle_vbo), cvec_from(2, sSquareShader, sTriangleShader));
 }

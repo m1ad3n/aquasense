@@ -1,5 +1,6 @@
 #include "shader.h"
 #include "../deps.h"
+#include "../macros.h"
 
 /**
  * @brief      Function that reads data from file
@@ -30,6 +31,26 @@ char* sReadDataFromFile(const char* _path) {
     return data;
 }
 
+void seperateShadersFromFile(char* _text, char** _vshader, char** _fshader) {
+    if (_text == NULL) return;
+
+    char* found = strstr(_text, "#shader fragment");
+    size_t pos = found - _text;
+
+    // vertex shader code
+    *_vshader = (char*)malloc(pos + 1);
+    strncpy(*_vshader, _text, pos);
+    (*_vshader)[pos] = '\0';
+
+    for (int i = 0; i < 15; i++)
+        (*_vshader)++;
+
+    // fragment shader code
+    *_fshader = strdup(found);
+    for (int i = 0; i < 17; i++)
+        (*_fshader)++;
+}
+
 /**
  * @brief      Functions that checks for shader compilation errors
  *
@@ -38,7 +59,7 @@ char* sReadDataFromFile(const char* _path) {
  *
  * @return     void
  */
-void sShader_checkCompileErrors(unsigned int shader, const char* type) {
+int sShader_checkCompileErrors(unsigned int shader, const char* type) {
     int success;
     char infoLog[1024];
     if (strcmp(type, "PROGRAM") != 0) {
@@ -58,49 +79,79 @@ void sShader_checkCompileErrors(unsigned int shader, const char* type) {
                 fprintf(stderr, "%s\n", infoLog);
         }
     }
+    return success;
 }
 
 /**
  * @brief      Load both shaders and compiles them
  *
- * @param[in]  _vpath  The vertex shader path
- * @param[in]  _fpath  The fragment shader path
+ * @param[in]  _shaderPath  The shader path
  *
  * @return     Pointer to a new sShader variable
  */
-struct sShader* sShader_new(const char* _vpath, const char* _fpath) {
+struct sShader* sShader_new(const char* _shaderPath) {
     struct sShader* shader = (struct sShader*)malloc(sizeof(struct sShader));
 
-    char* vertexCode = sReadDataFromFile(_vpath);
-    char* fragmentCode = sReadDataFromFile(_fpath);
+    char* vertexCode = NULL;
+    char* fragmentCode = NULL;
+
+    seperateShadersFromFile(sReadDataFromFile(_shaderPath), &vertexCode, &fragmentCode);
+
+    if (vertexCode == NULL || fragmentCode == NULL) {
+        free(shader);
+        return NULL;
+    }
+
+    printf("%s\n%s\n", vertexCode, fragmentCode);
 
     unsigned int vertex, fragment;
     
     // Vertex shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertexCode, NULL);
-    glCompileShader(vertex);
-    sShader_checkCompileErrors(vertex, "VERTEX");
+    GLCall(glShaderSource(vertex, 1, &vertexCode, NULL));
+    GLCall(glCompileShader(vertex));
+    if (sShader_checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
+        glDeleteProgram(vertex);
+        
+        free(vertexCode);
+        free(fragmentCode);
+        free(shader);
+
+        return NULL;
+    }
     
     // Fragment shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragmentCode, NULL);
-    glCompileShader(fragment);
-    sShader_checkCompileErrors(fragment, "FRAGMENT");
+    GLCall(glShaderSource(fragment, 1, &fragmentCode, NULL));
+    GLCall(glCompileShader(fragment));
+    if (sShader_checkCompileErrors(fragment, "FRAGMENT") == GL_FALSE) {
+        glDeleteProgram(vertex);
+        glDeleteProgram(fragment);
+        
+        free(vertexCode);
+        free(fragmentCode);
+        free(shader);
+
+        return NULL;
+    }
     
     // Shader program
     shader->ID = glCreateProgram();
-    glAttachShader(shader->ID, vertex);
-    glAttachShader(shader->ID, fragment);
-    glLinkProgram(shader->ID);
-    sShader_checkCompileErrors(shader->ID, "PROGRAM");
-    
+    GLCall(glAttachShader(shader->ID, vertex));
+    GLCall(glAttachShader(shader->ID, fragment));
+    GLCall(glLinkProgram(shader->ID));
+
     glDeleteShader(vertex);
     glDeleteShader(fragment);
     
     free(vertexCode);
-    free(fragmentCode);
+    // free(fragmentCode);
 
+    if (sShader_checkCompileErrors(shader->ID, "PROGRAM") == GL_FALSE) {
+        free(shader);
+        return NULL;
+    }
+    
     return shader;
 }
 
