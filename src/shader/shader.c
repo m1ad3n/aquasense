@@ -1,55 +1,5 @@
 #include "shader.h"
 #include "../deps.h"
-#include "../macros.h"
-
-/**
- * @brief      Function that reads data from file
- *
- * @param[in]  _path  The file path
- *
- * @return     File data as char* (string)
- */
-char* sReadDataFromFile(const char* _path) {
-    FILE* fptr;
-    fptr = fopen(_path, "r");
-    if (!fptr) {
-        fprintf(stderr, "FILE ERROR: Failed to open %s\n", _path);
-        return NULL;
-    }
-    
-    fseek(fptr, 0, SEEK_END);
-    size_t fSize = ftell(fptr);
-    fseek(fptr, 0, SEEK_SET);
-
-    char* data = NULL;
-    data = (char*)malloc(fSize + 1);
-    
-    fread(data, fSize, 1, fptr);
-    fclose(fptr);
-
-    data[fSize] = '\0';
-    return data;
-}
-
-void seperateShadersFromFile(char* _text, char** _vshader, char** _fshader) {
-    if (_text == NULL) return;
-
-    char* found = strstr(_text, "#shader fragment");
-    size_t pos = found - _text;
-
-    // vertex shader code
-    *_vshader = (char*)malloc(pos + 1);
-    strncpy(*_vshader, _text, pos);
-    (*_vshader)[pos] = '\0';
-
-    for (int i = 0; i < 15; i++)
-        (*_vshader)++;
-
-    // fragment shader code
-    *_fshader = strdup(found);
-    for (int i = 0; i < 17; i++)
-        (*_fshader)++;
-}
 
 /**
  * @brief      Functions that checks for shader compilation errors
@@ -94,15 +44,26 @@ struct sShader* sShader_new(const char* _shaderPath) {
 
     char* vertexCode = NULL;
     char* fragmentCode = NULL;
+    char* shaderCode  = sReadDataFromFile(_shaderPath);
 
-    seperateShadersFromFile(sReadDataFromFile(_shaderPath), &vertexCode, &fragmentCode);
+    if (!shaderCode) {
+        free(shader);
+        return NULL;
+    }
+
+    seperateTextWithSub(shaderCode, "#shader fragment", &vertexCode, &fragmentCode);
+    free(shaderCode);
 
     if (vertexCode == NULL || fragmentCode == NULL) {
         free(shader);
         return NULL;
     }
 
-    printf("%s\n%s\n", vertexCode, fragmentCode);
+    for (int i = 0; i < 15; i++) {
+        vertexCode++;
+        fragmentCode++;
+    }
+    fragmentCode++; fragmentCode++;
 
     unsigned int vertex, fragment;
     
@@ -113,8 +74,6 @@ struct sShader* sShader_new(const char* _shaderPath) {
     if (sShader_checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
         glDeleteProgram(vertex);
         
-        free(vertexCode);
-        free(fragmentCode);
         free(shader);
 
         return NULL;
@@ -127,11 +86,8 @@ struct sShader* sShader_new(const char* _shaderPath) {
     if (sShader_checkCompileErrors(fragment, "FRAGMENT") == GL_FALSE) {
         glDeleteProgram(vertex);
         glDeleteProgram(fragment);
-        
-        free(vertexCode);
-        free(fragmentCode);
+    
         free(shader);
-
         return NULL;
     }
     
@@ -143,9 +99,6 @@ struct sShader* sShader_new(const char* _shaderPath) {
 
     glDeleteShader(vertex);
     glDeleteShader(fragment);
-    
-    free(vertexCode);
-    // free(fragmentCode);
 
     if (sShader_checkCompileErrors(shader->ID, "PROGRAM") == GL_FALSE) {
         free(shader);

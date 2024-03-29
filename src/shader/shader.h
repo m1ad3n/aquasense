@@ -22,7 +22,4 @@ void sShader_setVec4(const struct sShader* shader, const char* name, float value
 void sShader_destroy(struct sShader* shader);
 int sShader_checkCompileErrors(unsigned int shader, const char* type);
 
-char* sReadDataFromFile(const char* _path);
-void seperateShadersFromFile(char* _text, char** _vshader, char** _fshader);
-
 #endif

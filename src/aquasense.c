@@ -5,10 +5,11 @@
   */
 
 #include "deps.h"
-#include "macros.h"
 #include "shader/shader.h"
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
+#include "str/str.h"
+#include <stdio.h>
 
 /**
  * Window ptr
@@ -44,7 +45,7 @@ float square_colors[4] = {
 };
 
 float triangle_colors[4] = {
-    0.0f, 1.0f, 0.0f, 0.0f
+    0.0f, 1.0f, 1.0f, 1.0f
 };
 
 /**
@@ -108,14 +109,14 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
     if (buffersVec) {
         for (int i = 0; i < cvec_size(buffersVec); i++)
             sBuffer_destroy((ASBuffer*)cvec_at(buffersVec, i));
-        fprintf(stdout, "OPENGL BUFFERS: Memory released\n");
+        fprintf(stdout, "OPENGL BUFFERS: %d buffers successfully deleted\n", cvec_size(buffersVec));
     }
 
     // shaders cleanup
     if (shadersVec) {
         for (int i = 0; i < cvec_size(shadersVec); i++)
             sShader_destroy((ASShader*)cvec_at(shadersVec, i));
-        fprintf(stdout, "OPENGL SHADERS: Memory released\n");
+        fprintf(stdout, "OPENGL SHADERS: %d shaders successfully deleted\n", cvec_size(shadersVec));
     }
 
     // cleanup glfw window
@@ -170,8 +171,10 @@ int main(int argc, char *argv[]) {
     if (!square_ibo) { cleanupAndExit(cvec_from(1, square_vbo), NULL); }
 
     // create and compile vertex and fragment shaders
-    ASShader* sSquareShader = sShader_new("D:\\aquasense\\resources\\Square.shader");
-    if (!sSquareShader) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL);
+    char* square_shader_path = newPath(3, "..", "resources", "Square.shader");
+    ASShader* sSquareShader = sShader_new(square_shader_path);
+    free(square_shader_path);
+    if (!sSquareShader) { cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL); }
 
     unsigned int triangle_vao;
     GLCall(glGenVertexArrays(1, &triangle_vao));
@@ -183,8 +186,10 @@ int main(int argc, char *argv[]) {
     GLCall(glEnableVertexAttribArray(0));
     GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
 
-    ASShader* sTriangleShader = sShader_new("D:\\aquasense\\resources\\Triangle.shader");
-    if (!sTriangleShader) cleanupAndExit(cvec_from(3, square_vbo, square_indicies, triangle_vbo), cvec_from(1, sSquareShader));
+    char* triangle_shader_path = newPath(3, "..", "resources", "Triangle.shader");
+    ASShader* sTriangleShader = sShader_new(triangle_shader_path);
+    free(triangle_shader_path);
+    if (!sTriangleShader) { cleanupAndExit(cvec_from(3, square_vbo, square_indicies, triangle_vbo), cvec_from(1, sSquareShader)); printf("didnt work\n"); }
     
     // unbind everything
     glBindVertexArray(0);
