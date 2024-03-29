@@ -13,7 +13,7 @@
 #define GLClearErrors() while (glGetError() != GL_NO_ERROR)
 #define GLCall(x) GLClearErrors(); x; if (GLLog(#x, __FILE__, __LINE__)) exit(1);
 
-extern inline bool GLLog(const char* func, const char* file, int line) {
+static bool GLLog(const char* func, const char* file, int line) {
 	int code = glGetError();
 	if (code)
 		fprintf(stderr, "OPENGL ERROR (%d): %s %s:%d\n", code, func, file, line);
