@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdarg.h>
 
 // for windows support
 #ifdef _WIN32
@@ -25,6 +26,9 @@
 // glfw
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+#include "macros.h"
+#include "str/str.h"
 
 
 #endif

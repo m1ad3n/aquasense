@@ -2,35 +2,6 @@
 #include "../deps.h"
 
 /**
- * @brief      Function that reads data from file
- *
- * @param[in]  _path  The file path
- *
- * @return     File data as char* (string)
- */
-char* sReadDataFromFile(const char* _path) {
-    FILE* fptr;
-    fptr = fopen(_path, "r");
-    if (!fptr) {
-        fprintf(stderr, "FILE ERROR: Failed to open %s\n", _path);
-        return NULL;
-    }
-    
-    fseek(fptr, 0, SEEK_END);
-    size_t fSize = ftell(fptr);
-    fseek(fptr, 0, SEEK_SET);
-
-    char* data = NULL;
-    data = (char*)malloc(fSize + 1);
-    
-    fread(data, fSize, 1, fptr);
-    fclose(fptr);
-
-    data[fSize] = '\0';
-    return data;
-}
-
-/**
  * @brief      Functions that checks for shader compilation errors
  *
  * @param[in]  shader  The shader ID
@@ -38,7 +9,7 @@ char* sReadDataFromFile(const char* _path) {
  *
  * @return     void
  */
-void sShader_checkCompileErrors(unsigned int shader, const char* type) {
+int sShader_checkCompileErrors(unsigned int shader, const char* type) {
     int success;
     char infoLog[1024];
     if (strcmp(type, "PROGRAM") != 0) {
@@ -58,49 +29,82 @@ void sShader_checkCompileErrors(unsigned int shader, const char* type) {
                 fprintf(stderr, "%s\n", infoLog);
         }
     }
+    return success;
 }
 
 /**
  * @brief      Load both shaders and compiles them
  *
- * @param[in]  _vpath  The vertex shader path
- * @param[in]  _fpath  The fragment shader path
+ * @param[in]  _shaderPath  The shader path
  *
  * @return     Pointer to a new sShader variable
  */
-struct sShader* sShader_new(const char* _vpath, const char* _fpath) {
+struct sShader* sShader_new(const char* _shaderPath) {
     struct sShader* shader = (struct sShader*)malloc(sizeof(struct sShader));
 
-    char* vertexCode = sReadDataFromFile(_vpath);
-    char* fragmentCode = sReadDataFromFile(_fpath);
+    char* vertexCode = NULL;
+    char* fragmentCode = NULL;
+    char* shaderCode  = sReadDataFromFile(_shaderPath);
+
+    if (!shaderCode) {
+        free(shader);
+        return NULL;
+    }
+
+    seperateTextWithSub(shaderCode, "#shader fragment", &vertexCode, &fragmentCode);
+    free(shaderCode);
+
+    if (vertexCode == NULL || fragmentCode == NULL) {
+        free(shader);
+        return NULL;
+    }
+
+    for (int i = 0; i < 15; i++) {
+        vertexCode++;
+        fragmentCode++;
+    }
+    fragmentCode++; fragmentCode++;
 
     unsigned int vertex, fragment;
     
     // Vertex shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertexCode, NULL);
-    glCompileShader(vertex);
-    sShader_checkCompileErrors(vertex, "VERTEX");
+    GLCall(glShaderSource(vertex, 1, &vertexCode, NULL));
+    GLCall(glCompileShader(vertex));
+    if (sShader_checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
+        glDeleteProgram(vertex);
+        
+        free(shader);
+
+        return NULL;
+    }
     
     // Fragment shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragmentCode, NULL);
-    glCompileShader(fragment);
-    sShader_checkCompileErrors(fragment, "FRAGMENT");
+    GLCall(glShaderSource(fragment, 1, &fragmentCode, NULL));
+    GLCall(glCompileShader(fragment));
+    if (sShader_checkCompileErrors(fragment, "FRAGMENT") == GL_FALSE) {
+        glDeleteProgram(vertex);
+        glDeleteProgram(fragment);
+    
+        free(shader);
+        return NULL;
+    }
     
     // Shader program
     shader->ID = glCreateProgram();
-    glAttachShader(shader->ID, vertex);
-    glAttachShader(shader->ID, fragment);
-    glLinkProgram(shader->ID);
-    sShader_checkCompileErrors(shader->ID, "PROGRAM");
-    
+    GLCall(glAttachShader(shader->ID, vertex));
+    GLCall(glAttachShader(shader->ID, fragment));
+    GLCall(glLinkProgram(shader->ID));
+
     glDeleteShader(vertex);
     glDeleteShader(fragment);
-    
-    free(vertexCode);
-    free(fragmentCode);
 
+    if (sShader_checkCompileErrors(shader->ID, "PROGRAM") == GL_FALSE) {
+        free(shader);
+        return NULL;
+    }
+    
     return shader;
 }
 

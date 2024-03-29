@@ -8,7 +8,8 @@
 #ifndef AQUASENSE_MACROS
 #define AQUASENSE_MACROS
 
-#include "deps.h"
+#include <GL/glew.h>
+#include <stdio.h>
 
 #define GLClearErrors() while (glGetError() != GL_NO_ERROR)
 #define GLCall(x) GLClearErrors(); x; if (GLLog(#x, __FILE__, __LINE__)) exit(1);
