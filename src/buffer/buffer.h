@@ -29,8 +29,8 @@ typedef struct sBuffer ASBuffer;
  * TARGET - (GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, ...)
  */
 struct sBuffer {
-	unsigned int ID;
-	unsigned int TARGET;
+    unsigned int ID;
+    unsigned int TARGET;
 };
 
 /**

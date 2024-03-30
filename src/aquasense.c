@@ -9,7 +9,7 @@
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
 #include "str/str.h"
-#include <stdio.h>
+#include "texture/texture.h"
 
 /**
  * Window ptr
@@ -19,33 +19,17 @@ GLFWwindow* window;
 /**
  * Vertex data for the triangle
  */
-float square_vertecies[8] = {
-    -0.5f, -0.5f, // 0
-     0.5f, -0.5f, // 1
-     0.5f,  0.5f, // 2
-    -0.5f,  0.5f, // 3
+float square_vertecies[16] = {
+    // CORDS            // TEXTURE CORDS
+    -0.5f, -0.5f,       0.0f, 0.0f,   // 0
+     0.5f, -0.5f,       1.0f, 0.0f,   // 1
+     0.5f,  0.5f,       1.0f, 1.0f,   // 2
+    -0.5f,  0.5f,       0.0f, 1.0f    // 3
 };
 
 unsigned int square_indicies[6] = {
-    1, 2, 3,
-    2, 3, 0
-};
-
-float triangle_vertecies[6] = {
-    -0.9f, -0.9f,
-    0.0f, -0.5f,
-    0.9f, -0.9f,
-};
-
-/**
- * Triangle color data
- */
-float square_colors[4] = {
-    1.0f, 0.0f, 0.0f, 1.0f
-};
-
-float triangle_colors[4] = {
-    0.0f, 1.0f, 1.0f, 1.0f
+    0, 1, 2,
+    0, 3, 2
 };
 
 /**
@@ -165,7 +149,9 @@ int main(int argc, char *argv[]) {
     if (!square_vbo) cleanupAndExit(NULL, NULL);
 
     GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
+    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0));
+    GLCall(glEnableVertexAttribArray(1));
+    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))));
 
     IndexBuffer* square_ibo = sIndexBuffer_new(square_indicies, 6);
     if (!square_ibo) { cleanupAndExit(cvec_from(1, square_vbo), NULL); }
@@ -176,21 +162,12 @@ int main(int argc, char *argv[]) {
     free(square_shader_path);
     if (!sSquareShader) { cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL); }
 
-    unsigned int triangle_vao;
-    GLCall(glGenVertexArrays(1, &triangle_vao));
-    GLCall(glBindVertexArray(triangle_vao));
+    ASTexture* square_texture = sTexture_new(newPath(3, "..", "resources", "cat.jpg"), GL_CLAMP_TO_EDGE);
+    if (!square_texture) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
+    sTexture_bind(square_texture, 1);
+    sShader_setInt(sSquareShader, "tex0", 1);
+    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
-    VertexBuffer* triangle_vbo = sBuffer_new(GL_ARRAY_BUFFER, triangle_vertecies, sizeof(triangle_vertecies));
-    if (!triangle_vbo) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
-
-    GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL));
-
-    char* triangle_shader_path = newPath(3, "..", "resources", "Triangle.shader");
-    ASShader* sTriangleShader = sShader_new(triangle_shader_path);
-    free(triangle_shader_path);
-    if (!sTriangleShader) { cleanupAndExit(cvec_from(3, square_vbo, square_indicies, triangle_vbo), cvec_from(1, sSquareShader)); printf("didnt work\n"); }
-    
     // unbind everything
     glBindVertexArray(0);
     glUseProgram(0);
@@ -203,16 +180,11 @@ int main(int argc, char *argv[]) {
         GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
 
         sShader_use(sSquareShader);
-        sShader_setVec4(sSquareShader, "square_color", square_colors);
+        sTexture_bind(square_texture, 1);
 
         // now we need to bind only the vertex array object
         GLCall(glBindVertexArray(square_vao));
         GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL));
-
-        sShader_use(sTriangleShader);
-        sShader_setVec4(sTriangleShader, "triangle_color", triangle_colors);
-        GLCall(glBindVertexArray(triangle_vao));
-        GLCall(glDrawArrays(GL_TRIANGLES, 0, 3));
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);
@@ -220,5 +192,5 @@ int main(int argc, char *argv[]) {
     }
 
     // EXIT
-    cleanupAndExit(cvec_from(3, square_vbo, square_ibo, triangle_vbo), cvec_from(2, sSquareShader, sTriangleShader));
+    cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
 }

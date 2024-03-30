@@ -45,28 +45,25 @@ char* newPath(int count, ...) {
     char* sep = (char*)malloc(3);
     
     path[0] = '\0';
-    sep[0] = '/';
-    sep[1] = '\0';
+    strcpy(sep, "/");
 
 #ifdef _WIN32
     os++;
-    sep[0] = '\\';
-    sep[1] = '\\';
-    sep[2] = '\0';
+    strcpy(sep, "\\\\");
 #endif
 
     va_start(list, count);
 
     for (int i = 0; i < count; i++) {
         char* tmp = va_arg(list, char*);
-        path = (char*)realloc(path, strlen(path) + strlen(tmp) + 1);
+        path = (char*)realloc(path, strlen(path) + strlen(tmp) + 3);
         strcat(path, tmp);
         strcat(path, sep);
     }
 
-    path[strlen(path) - os] = '\0';
     va_end(list);
     free(sep);
 
+    path[strlen(path) - os] = '\0';
     return path;
 }

@@ -40,24 +40,18 @@ int sShader_checkCompileErrors(unsigned int shader, const char* type) {
  * @return     Pointer to a new sShader variable
  */
 struct sShader* sShader_new(const char* _shaderPath) {
-    struct sShader* shader = (struct sShader*)malloc(sizeof(struct sShader));
-
     char* vertexCode = NULL;
     char* fragmentCode = NULL;
     char* shaderCode  = sReadDataFromFile(_shaderPath);
 
-    if (!shaderCode) {
-        free(shader);
+    if (!shaderCode)
         return NULL;
-    }
 
     seperateTextWithSub(shaderCode, "#shader fragment", &vertexCode, &fragmentCode);
     free(shaderCode);
 
-    if (vertexCode == NULL || fragmentCode == NULL) {
-        free(shader);
+    if (vertexCode == NULL || fragmentCode == NULL)
         return NULL;
-    }
 
     for (int i = 0; i < 15; i++) {
         vertexCode++;
@@ -73,8 +67,6 @@ struct sShader* sShader_new(const char* _shaderPath) {
     GLCall(glCompileShader(vertex));
     if (sShader_checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
         glDeleteProgram(vertex);
-        
-        free(shader);
 
         return NULL;
     }
@@ -86,12 +78,11 @@ struct sShader* sShader_new(const char* _shaderPath) {
     if (sShader_checkCompileErrors(fragment, "FRAGMENT") == GL_FALSE) {
         glDeleteProgram(vertex);
         glDeleteProgram(fragment);
-    
-        free(shader);
         return NULL;
     }
     
     // Shader program
+    struct sShader* shader = (struct sShader*)malloc(sizeof(struct sShader));
     shader->ID = glCreateProgram();
     GLCall(glAttachShader(shader->ID, vertex));
     GLCall(glAttachShader(shader->ID, fragment));
