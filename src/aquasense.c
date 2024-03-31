@@ -5,6 +5,7 @@
   */
 
 #include "deps.h"
+#include "macros.h"
 #include "shader/shader.h"
 #include "buffer/buffer.h"
 #include "cvec/cvec.h"
@@ -17,14 +18,25 @@
 GLFWwindow* window;
 
 /**
+ * Shader path
+ */
+#ifdef _WIN32
+#	define SHADER_PATH newPath(4, "D:", "aquasense", "resources", "Square.shader")
+#   define TEXTURE_PATH newPath(4, "D:", "aquasense", "resources", "cat.jpg")
+#else
+#	define SHADER_PATH newPath(5, "~", "dev", "aquasense", "resources", "Square.shader")
+#   define TEXTURE_PATH newPath(5, "~", "dev", "aquasense", "resources", "cat.jpg")
+#endif	
+
+/**
  * Vertex data for the triangle
  */
-float square_vertecies[16] = {
-    // CORDS            // TEXTURE CORDS
-    -0.5f, -0.5f,       0.0f, 0.0f,   // 0
-     0.5f, -0.5f,       1.0f, 0.0f,   // 1
-     0.5f,  0.5f,       1.0f, 1.0f,   // 2
-    -0.5f,  0.5f,       0.0f, 1.0f    // 3
+float square_vertecies[20] = {
+    // CORDS                // TEXTURE CORDS
+    -0.3f, -0.3f, 1.0f,     0.0f, 0.0f,       // 0
+     0.3f, -0.3f, 1.0f,     1.0f, 0.0f,       // 1
+     0.3f,  0.3f, 1.0f,     1.0f, 1.0f,       // 2
+    -0.3f,  0.3f, 1.0f,     0.0f, 1.0f        // 3
 };
 
 unsigned int square_indicies[6] = {
@@ -77,6 +89,7 @@ static bool asInitGlfw(unsigned short _width, unsigned short _height) {
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
     glfwSetErrorCallback(error_callback);
+	glfwSwapInterval(1);
 
     return true;
 }
@@ -93,14 +106,14 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
     if (buffersVec) {
         for (int i = 0; i < cvec_size(buffersVec); i++)
             sBuffer_destroy((ASBuffer*)cvec_at(buffersVec, i));
-        fprintf(stdout, "OPENGL BUFFERS: %d buffers successfully deleted\n", cvec_size(buffersVec));
+        fprintf(stdout, "MEMORY: %d buffers successfully deleted\n", cvec_size(buffersVec));
     }
 
     // shaders cleanup
     if (shadersVec) {
         for (int i = 0; i < cvec_size(shadersVec); i++)
             sShader_destroy((ASShader*)cvec_at(shadersVec, i));
-        fprintf(stdout, "OPENGL SHADERS: %d shaders successfully deleted\n", cvec_size(shadersVec));
+        fprintf(stdout, "MEMORY: %d shaders successfully deleted\n", cvec_size(shadersVec));
     }
 
     // cleanup glfw window
@@ -139,6 +152,8 @@ int main(int argc, char *argv[]) {
     // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
+    GLCall(glEnable(GL_BLEND));
+
     // vertex array object
     unsigned int square_vao;
     GLCall(glGenVertexArrays(1, &square_vao));
@@ -149,20 +164,22 @@ int main(int argc, char *argv[]) {
     if (!square_vbo) cleanupAndExit(NULL, NULL);
 
     GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0));
+    GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0));
     GLCall(glEnableVertexAttribArray(1));
-    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float))));
+    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
 
     IndexBuffer* square_ibo = sIndexBuffer_new(square_indicies, 6);
     if (!square_ibo) { cleanupAndExit(cvec_from(1, square_vbo), NULL); }
 
     // create and compile vertex and fragment shaders
-    char* square_shader_path = newPath(3, "..", "resources", "Square.shader");
+    char* square_shader_path = SHADER_PATH;
     ASShader* sSquareShader = sShader_new(square_shader_path);
     free(square_shader_path);
     if (!sSquareShader) { cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL); }
 
-    ASTexture* square_texture = sTexture_new(newPath(3, "..", "resources", "cat.jpg"), GL_CLAMP_TO_EDGE);
+	char* texture_path = TEXTURE_PATH;
+    ASTexture* square_texture = sTexture_new(texture_path, GL_CLAMP_TO_EDGE);
+	free(texture_path);
     if (!square_texture) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
     sTexture_bind(square_texture, 1);
     sShader_setInt(sSquareShader, "tex0", 1);
