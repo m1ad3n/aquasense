@@ -10,6 +10,8 @@
 #include "buffers/shader.h"
 #include "buffers/texture.h"
 #include "string_functions.h"
+#include "camera/camera.h"
+
 /**
  * Window ptr
  */
@@ -21,17 +23,21 @@ GLFWwindow* window;
 /**
  * Vertex data for the triangle
  */
-float square_vertecies[20] = {
-    // CORDS                // TEXTURE CORDS
-    -0.5f,  -0.5f, 1.0f,     0.0f, 0.0f,       // 0
-    0.5f, -0.5f, 1.0f,     1.0f, 0.0f,       // 1
-    0.5f,  0.5f, 1.0f,     1.0f, 1.0f,       // 2
-    -0.5f,  0.5f, 1.0f,     0.0f, 1.0f        // 3
+float vertecies[25] = {
+    -0.5f, 0.0f, 0.5f,   0.0f, 0.0f,
+    -0.5f, 0.0f, -0.5f,  5.0f, 0.0f,
+    0.5f, 0.0f, -0.5f,   0.0f, 0.0f,
+    0.5f, 0.0f, 0.5f,    5.0f, 0.0f,
+    0.0f, 0.8f, 0.0f,    2.5f, 5.0f
 };
 
-unsigned int square_indicies[6] = {
-    0, 1, 2,
-    0, 3, 2
+unsigned int indicies[18] = {
+    0,1,2,
+    0,2,3,
+    0,1,4,
+    1,2,4,
+    2,3,4,
+    3,0,4
 };
 
 /**
@@ -119,36 +125,37 @@ int main(int argc, char *argv[]) {
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
     GLCall(glEnable(GL_BLEND));
+    GLCall(glEnable(GL_DEPTH_TEST));
 
     std::vector<BufferBase*> buffers;
 
     // vertex array object
-    unsigned int square_vao;
-    GLCall(glGenVertexArrays(1, &square_vao));
-    GLCall(glBindVertexArray(square_vao));
+    unsigned int vertex_array;
+    GLCall(glGenVertexArrays(1, &vertex_array));
+    GLCall(glBindVertexArray(vertex_array));
 
     // creating a vertex buffer
-    VertexBuffer square_vbo(GL_ARRAY_BUFFER, square_vertecies, sizeof(square_vertecies));
-    buffers.push_back(&square_vbo);
+    VertexBuffer vb_object(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
+    buffers.push_back(&vb_object);
 
     GLCall(glEnableVertexAttribArray(0));
     GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0));
     GLCall(glEnableVertexAttribArray(1));
     GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
 
-    IndexBuffer square_ibo(GL_ELEMENT_ARRAY_BUFFER, square_indicies, 6 * sizeof(unsigned int));
-    buffers.push_back(&square_ibo);
+    IndexBuffer ib_object(GL_ELEMENT_ARRAY_BUFFER, indicies, 18 * sizeof(unsigned int));
+    buffers.push_back(&ib_object);
 
     Path shader_path; shader_path >> ".." >> "resources" >> "Square.shader";
-    Shader sSquareShader(shader_path);
-    buffers.push_back(&sSquareShader);
+    Shader main_shader(shader_path);
+    buffers.push_back(&main_shader);
 
-    Path texture_path; texture_path >> ".." >> "resources" >> "cat.jpg";
-    Texture square_texture(texture_path, GL_CLAMP_TO_EDGE);
-    buffers.push_back(&square_texture);
+    Path texture_path; texture_path >> ".." >> "resources" >> "bricks.jpg";
+    Texture main_texture(texture_path, GL_REPEAT);
+    buffers.push_back(&main_texture);
 
-    square_texture.Bind(1);
-    sSquareShader.SetInt("tex0", 1);
+    main_texture.Bind(1);
+    main_shader.SetInt("tex0", 1);
     GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
     // unbind everything
@@ -157,20 +164,25 @@ int main(int argc, char *argv[]) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
+    Camera cam(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f));
+
     // main application loop
     while (!glfwWindowShouldClose(window)) {
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
 
         // bind the shader and set all the uniforms
-        sSquareShader.Bind();
+        main_shader.Bind();
 
         // bind the textures
-        square_texture.Bind();
+        main_texture.Bind();
+
+        cam.Inputs(window);
+        cam.Matrix(45.0f, 0.1f, 100.0f, main_shader, "cameraMat");
 
         // now we need to bind only the vertex array object
-        GLCall(glBindVertexArray(square_vao));
-        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL));
+        GLCall(glBindVertexArray(vertex_array));
+        GLCall(glDrawElements(GL_TRIANGLES, sizeof(indicies) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL));
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);
