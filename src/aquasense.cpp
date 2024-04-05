@@ -6,37 +6,27 @@
 
 #include "deps.h"
 #include "macros.h"
-#include "shader/shader.h"
-#include "buffer/buffer.h"
-#include "cvec/cvec.h"
-#include "str/str.h"
-#include "texture/texture.h"
-
+#include "buffers/buffer.h"
+#include "buffers/shader.h"
+#include "buffers/texture.h"
+#include "string_functions.h"
 /**
  * Window ptr
  */
 GLFWwindow* window;
 
-/**
- * Shader path
- */
-#ifdef _WIN32
-#	define SHADER_PATH newPath(4, "D:", "aquasense", "resources", "Square.shader")
-#   define TEXTURE_PATH newPath(4, "D:", "aquasense", "resources", "cat.jpg")
-#else
-#	define SHADER_PATH newPath(5, "~", "dev", "aquasense", "resources", "Square.shader")
-#   define TEXTURE_PATH newPath(5, "~", "dev", "aquasense", "resources", "cat.jpg")
-#endif	
+#define WIDTH  640
+#define HEIGHT 480
 
 /**
  * Vertex data for the triangle
  */
 float square_vertecies[20] = {
     // CORDS                // TEXTURE CORDS
-    -0.3f, -0.3f, 1.0f,     0.0f, 0.0f,       // 0
-     0.3f, -0.3f, 1.0f,     1.0f, 0.0f,       // 1
-     0.3f,  0.3f, 1.0f,     1.0f, 1.0f,       // 2
-    -0.3f,  0.3f, 1.0f,     0.0f, 1.0f        // 3
+    -0.5f,  -0.5f, 1.0f,     0.0f, 0.0f,       // 0
+    0.5f, -0.5f, 1.0f,     1.0f, 0.0f,       // 1
+    0.5f,  0.5f, 1.0f,     1.0f, 1.0f,       // 2
+    -0.5f,  0.5f, 1.0f,     0.0f, 1.0f        // 3
 };
 
 unsigned int square_indicies[6] = {
@@ -76,14 +66,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
  * @brief      Initialize GLFW window
  * @return     status
  */
-static bool asInitGlfw(unsigned short _width, unsigned short _height) {
+static bool asInitGlfw() {
     if (!glfwInit()) return false;
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    window = glfwCreateWindow(_width, _height, "AquaSense", NULL, NULL);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "AquaSense", NULL, NULL);
     if (!window) { glfwTerminate(); return false; }
 
     glfwMakeContextCurrent(window);
@@ -94,39 +84,17 @@ static bool asInitGlfw(unsigned short _width, unsigned short _height) {
     return true;
 }
 
-/**
- * @brief      Deallocates all used memory and exits the application
- *
- * @param      buffersVec  The buffers vector
- * @param      shadersVec  The shaders vector
- * @return     void
- */
-static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
-    // buffers cleanup
-    if (buffersVec) {
-        for (int i = 0; i < cvec_size(buffersVec); i++)
-            sBuffer_destroy((ASBuffer*)cvec_at(buffersVec, i));
-        fprintf(stdout, "MEMORY: %d buffers successfully deleted\n", cvec_size(buffersVec));
-    }
-
-    // shaders cleanup
-    if (shadersVec) {
-        for (int i = 0; i < cvec_size(shadersVec); i++)
-            sShader_destroy((ASShader*)cvec_at(shadersVec, i));
-        fprintf(stdout, "MEMORY: %d shaders successfully deleted\n", cvec_size(shadersVec));
-    }
+static void cleanupAndExit(std::vector<BufferBase*> buffers) {
+    for (auto it : buffers)
+        it->Delete();
 
     // cleanup glfw window
     glfwDestroyWindow(window);
     glfwTerminate();
-    fprintf(stdout, "GLFW: Window memory released\n");
-
-    // free the memory
-    cvec_free(buffersVec);
-    cvec_free(shadersVec);
+    std::cout << "GLFW: Window memory released" << std::endl;
 
     // terminates the application
-    fprintf(stdout, "AQUASENSE: Goodbye!\n");
+    std::cout << "AQUASENSE: Goodbye!" << std::endl;
     exit(0);
 }
 
@@ -139,20 +107,20 @@ static void cleanupAndExit(cvec* buffersVec, cvec* shadersVec) {
  * @return     exit status
  */
 int main(int argc, char *argv[]) {
-    if (!asInitGlfw(640, 480)) return -1;
+
+    if (!asInitGlfw()) return -1;
     else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
     // initializing opengl (glew)
     int glew_error_code = glewInit();
     if (glew_error_code != GLEW_OK) {
         fprintf(stderr, "OPENGL ERROR: glewInit() is not working properly\n");
-        cleanupAndExit(NULL, NULL);
     }
-
-    // details about opengl
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
     GLCall(glEnable(GL_BLEND));
+
+    std::vector<BufferBase*> buffers;
 
     // vertex array object
     unsigned int square_vao;
@@ -160,29 +128,27 @@ int main(int argc, char *argv[]) {
     GLCall(glBindVertexArray(square_vao));
 
     // creating a vertex buffer
-    VertexBuffer* square_vbo = sBuffer_new(GL_ARRAY_BUFFER, square_vertecies, sizeof(square_vertecies));
-    if (!square_vbo) cleanupAndExit(NULL, NULL);
+    VertexBuffer square_vbo(GL_ARRAY_BUFFER, square_vertecies, sizeof(square_vertecies));
+    buffers.push_back(&square_vbo);
 
     GLCall(glEnableVertexAttribArray(0));
     GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0));
     GLCall(glEnableVertexAttribArray(1));
     GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
 
-    IndexBuffer* square_ibo = sIndexBuffer_new(square_indicies, 6);
-    if (!square_ibo) { cleanupAndExit(cvec_from(1, square_vbo), NULL); }
+    IndexBuffer square_ibo(GL_ELEMENT_ARRAY_BUFFER, square_indicies, 6 * sizeof(unsigned int));
+    buffers.push_back(&square_ibo);
 
-    // create and compile vertex and fragment shaders
-    char* square_shader_path = SHADER_PATH;
-    ASShader* sSquareShader = sShader_new(square_shader_path);
-    free(square_shader_path);
-    if (!sSquareShader) { cleanupAndExit(cvec_from(2, square_vbo, square_ibo), NULL); }
+    Path shader_path; shader_path >> ".." >> "resources" >> "Square.shader";
+    Shader sSquareShader(shader_path);
+    buffers.push_back(&sSquareShader);
 
-	char* texture_path = TEXTURE_PATH;
-    ASTexture* square_texture = sTexture_new(texture_path, GL_CLAMP_TO_EDGE);
-	free(texture_path);
-    if (!square_texture) cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
-    sTexture_bind(square_texture, 1);
-    sShader_setInt(sSquareShader, "tex0", 1);
+    Path texture_path; texture_path >> ".." >> "resources" >> "cat.jpg";
+    Texture square_texture(texture_path, GL_CLAMP_TO_EDGE);
+    buffers.push_back(&square_texture);
+
+    square_texture.Bind(1);
+    sSquareShader.SetInt("tex0", 1);
     GLCall(glGenerateMipmap(GL_TEXTURE_2D));
 
     // unbind everything
@@ -196,8 +162,11 @@ int main(int argc, char *argv[]) {
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
 
-        sShader_use(sSquareShader);
-        sTexture_bind(square_texture, 1);
+        // bind the shader and set all the uniforms
+        sSquareShader.Bind();
+
+        // bind the textures
+        square_texture.Bind();
 
         // now we need to bind only the vertex array object
         GLCall(glBindVertexArray(square_vao));
@@ -209,5 +178,5 @@ int main(int argc, char *argv[]) {
     }
 
     // EXIT
-    cleanupAndExit(cvec_from(2, square_vbo, square_ibo), cvec_from(1, sSquareShader));
+    cleanupAndExit(buffers);
 }

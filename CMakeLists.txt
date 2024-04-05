@@ -9,10 +9,10 @@ find_package(glfw3 REQUIRED)
 
 add_executable(app)
 
-target_link_libraries(app glfw ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES})
-target_include_directories(app PUBLIC src cglm/include)
+target_link_libraries(app glfw ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} m)
+target_include_directories(app PUBLIC src)
 
-set_property(TARGET app PROPERTY CMAKE_C_STANDARD 11)
-set_property(TARGET app PROPERTY CMAKE_C_STANDARD_REQUIRED ON)
+set_property(TARGET app PROPERTY CMAKE_CXX_STANDARD 11)
+set_property(TARGET app PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(src)

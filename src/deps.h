@@ -9,15 +9,14 @@
 #define AQUASENSE_DEPS
 
 // standard library's for c
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <stdarg.h>
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstring>
 
 // for windows support
 #ifdef _WIN32
-#	include <windows.h>
+#   include <windows.h>
 #endif
 
 // opengl (must be included before any other opengl library's)
@@ -28,7 +27,5 @@
 #include <GLFW/glfw3.h>
 
 #include "macros.h"
-#include "str/str.h"
 
-
-#endif
+#endif // AQUASENSE_DEPS
