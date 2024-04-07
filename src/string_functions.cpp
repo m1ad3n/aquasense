@@ -3,7 +3,9 @@
 #include <sstream>
 #include <fstream>
 
-Path& Path::operator>>(std::string child) {
+using namespace as;
+
+Path& Path::operator<<(std::string child) {
 	this->childs.push_back(child);
 	return *this;
 }
@@ -23,4 +25,9 @@ std::string Path::GetData(std::string p) {
 	std::stringstream sbuffer;
 	sbuffer << t.rdbuf();
 	return sbuffer.str();
+}
+
+std::ostream& operator<<(std::ostream& os, Path path) {
+	os << path.Get();
+	return os;
 }

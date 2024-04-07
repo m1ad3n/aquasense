@@ -10,7 +10,13 @@
 #include "buffers/shader.h"
 #include "buffers/texture.h"
 #include "string_functions.h"
-#include "camera/camera.h"
+#include "renderer/renderer.h"
+#include "buffers/vertex_array.h"
+
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 /**
  * Window ptr
@@ -23,15 +29,16 @@ GLFWwindow* window;
 /**
  * Vertex data for the triangle
  */
-float vertecies[25] = {
-    -0.5f, 0.0f, 0.5f,   0.0f, 0.0f,
-    -0.5f, 0.0f, -0.5f,  5.0f, 0.0f,
-    0.5f, 0.0f, -0.5f,   0.0f, 0.0f,
-    0.5f, 0.0f, 0.5f,    5.0f, 0.0f,
-    0.0f, 0.8f, 0.0f,    2.5f, 5.0f
+float vertecies[] = {
+    // CORDS                // TEXTURE CORDS
+    -0.5f, 0.0f,  0.5f,     0.0f, 0.0f,
+    -0.5f, 0.0f, -0.5f,     5.0f, 0.0f,
+     0.5f, 0.0f, -0.5f,     0.0f, 0.0f,
+     0.5f, 0.0f,  0.5f,     5.0f, 0.0f,
+     0.0f, 0.8f,  0.0f,     2.5f, 5.0f
 };
 
-unsigned int indicies[18] = {
+unsigned int indicies[] = {
     0,1,2,
     0,2,3,
     0,1,4,
@@ -90,9 +97,9 @@ static bool asInitGlfw() {
     return true;
 }
 
-static void cleanupAndExit(std::vector<BufferBase*> buffers) {
+static void cleanupAndExit(std::vector<as::BufferBase*> buffers) {
     for (auto it : buffers)
-        it->Delete();
+        delete it;
 
     // cleanup glfw window
     glfwDestroyWindow(window);
@@ -125,38 +132,35 @@ int main(int argc, char *argv[]) {
     printf("OpenGL Version %s\n", glGetString(GL_VERSION));
 
     GLCall(glEnable(GL_BLEND));
+    GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     GLCall(glEnable(GL_DEPTH_TEST));
 
-    std::vector<BufferBase*> buffers;
+    // creating a vertex array and binding the buffers to it
+    as::VertexArray* va_object = new as::VertexArray();
+    va_object->AddVertexBuffer(vertecies, sizeof(vertecies), 5);
+    va_object->AddIndexBuffer(indicies, 18);
 
-    // vertex array object
-    unsigned int vertex_array;
-    GLCall(glGenVertexArrays(1, &vertex_array));
-    GLCall(glBindVertexArray(vertex_array));
+    // vertex pointer layout
+    va_object->Push(3);
+    va_object->Push(2);
 
-    // creating a vertex buffer
-    VertexBuffer vb_object(GL_ARRAY_BUFFER, vertecies, sizeof(vertecies));
-    buffers.push_back(&vb_object);
+    as::Path shader_path; shader_path << ".." << "resources" << "Square.shader";
+    as::Shader *main_shader = new as::Shader(shader_path);
 
-    GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0));
-    GLCall(glEnableVertexAttribArray(1));
-    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float))));
+    // first bricks texture (index 0)
+    as::Path texture_path; texture_path << ".." << "resources" << "bricks.jpg";
+    as::Texture* main_texture = new as::Texture(texture_path, GL_REPEAT);
 
-    IndexBuffer ib_object(GL_ELEMENT_ARRAY_BUFFER, indicies, 18 * sizeof(unsigned int));
-    buffers.push_back(&ib_object);
+    // second cat texture (index 1)
+    as::Path cat_texture_path; cat_texture_path << ".." << "resources" << "cat.jpg";
+    as::Texture* cat_texture = new as::Texture(cat_texture_path, GL_REPEAT);
 
-    Path shader_path; shader_path >> ".." >> "resources" >> "Square.shader";
-    Shader main_shader(shader_path);
-    buffers.push_back(&main_shader);
-
-    Path texture_path; texture_path >> ".." >> "resources" >> "bricks.jpg";
-    Texture main_texture(texture_path, GL_REPEAT);
-    buffers.push_back(&main_texture);
-
-    main_texture.Bind(1);
-    main_shader.SetInt("tex0", 1);
-    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+    // pushing all the buffers for deletion
+    std::vector<as::BufferBase*> buffers;
+    buffers.push_back(va_object);
+    buffers.push_back(main_shader);
+    buffers.push_back(main_texture);
+    buffers.push_back(cat_texture);
 
     // unbind everything
     glBindVertexArray(0);
@@ -164,25 +168,60 @@ int main(int argc, char *argv[]) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    Camera cam(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 2.0f));
+    glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 result;
+
+    projection = glm::perspective(glm::radians(45.0f), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
+
+    float rotation = 0.1f;
+    double prev_time = glfwGetTime(), current_time;
 
     // main application loop
-    while (!glfwWindowShouldClose(window)) {
-        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GLCall(glClearColor(0.0, 0.0, 0.0, 1.0));
+    while (!glfwWindowShouldClose(window))
+    {
+        as::Renderer::Clear(0.0f, 0.0f, 0.0f, 1.0f);
+
+        //
+        // first pyramid
+        //
+
+        // math for object rotation
+        current_time = glfwGetTime();
+        if (current_time - prev_time >= ((float)1 / 60)) {
+            prev_time = current_time;
+            (rotation >= 360.0f) ? rotation = 0.5 : rotation += 0.5f;
+        }
+        view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.4f, -3.0f));
+        model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+        result = projection * view * model;
 
         // bind the shader and set all the uniforms
-        main_shader.Bind();
+        main_shader->Bind();
+        main_shader->SetMat4("u_MVP", glm::value_ptr(result));
 
         // bind the textures
-        main_texture.Bind();
+        main_texture->Bind(0);
+        main_shader->SetInt("tex0", 0);
 
-        cam.Inputs(window);
-        cam.Matrix(45.0f, 0.1f, 100.0f, main_shader, "cameraMat");
+        as::Renderer::Draw(va_object, va_object->GetIndicies(), main_shader);
 
-        // now we need to bind only the vertex array object
-        GLCall(glBindVertexArray(vertex_array));
-        GLCall(glDrawElements(GL_TRIANGLES, sizeof(indicies) / sizeof(unsigned int), GL_UNSIGNED_INT, NULL));
+        //
+        // second pyramid
+        //
+        model = glm::mat4(1.0f);
+        view = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -0.4f, -5.1f));
+        result = projection * view * model;
+
+        // shader and matrix values for second pyramid
+        main_shader->Bind();
+        main_shader->SetMat4("u_MVP", glm::value_ptr(result));
+
+        cat_texture->Bind(1);
+        main_shader->SetInt("tex0", 1);
+
+        as::Renderer::Draw(va_object, va_object->GetIndicies(), main_shader);
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);

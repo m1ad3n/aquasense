@@ -1,15 +1,18 @@
 #ifndef AQUASENSE_TEXTURE
 #define AQUASENSE_TEXTURE
 
-#include "buffer.h"
-#include "../string_functions.h"
+#include "buffers/buffer.h"
+#include "string_functions.h"
+
+namespace as
+{
 
 class Texture : public BufferBase {
 public:
 	unsigned int ID;
 
 	Texture(Path path, unsigned int type);
-	~Texture() override;
+	~Texture() override { this->Delete(); };
 
 	void Bind(unsigned int slot);
 	void Bind() override { this->Bind(0); }
@@ -30,5 +33,7 @@ private:
 
 	unsigned char* bytes;
 };
+
+}
 
 #endif // AQUASENSE_TEXTURE

@@ -1,8 +1,10 @@
-#include "../deps.h"
-#include "texture.h"
-#include "../stb/stb_image.h"
+#include "deps.h"
+#include "buffers/texture.h"
+#include "stb/stb_image.h"
 
-Texture::Texture(Path path, unsigned int type) {
+using namespace as;
+
+Texture::Texture(Path path, unsigned int type) : BufferBase("Texture") {
 	stbi_set_flip_vertically_on_load(1);
 	this->bytes = stbi_load(path.Get().c_str(), &this->width, &this->height, &this->bits_per_pixel, 4);
 
@@ -20,9 +22,6 @@ Texture::Texture(Path path, unsigned int type) {
 		stbi_image_free(this->bytes);
 }
 
-Texture::~Texture() {
-
-}
 
 void Texture::Bind(unsigned int slot) {
 	GLCall(glActiveTexture(GL_TEXTURE0 + slot));

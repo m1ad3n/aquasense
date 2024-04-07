@@ -9,6 +9,7 @@
 #define AQUASENSE_DEPS
 
 // standard library's for c
+#include <math.h>
 #include <iostream>
 #include <vector>
 #include <string>

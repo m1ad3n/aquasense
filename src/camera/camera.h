@@ -1,9 +1,11 @@
 #ifndef AQUASENSE_CAMERA
 #define AQUASENSE_CAMERA
 
-#include "../deps.h"
-#include "../buffers/shader.h"
+#include "buffers/shader.h"
 #include <glm/glm.hpp>
+
+namespace as
+{
 
 class Camera
 {
@@ -32,4 +34,7 @@ public:
 	// Handles camera inputs
 	void Inputs(GLFWwindow* window);
 };
+
+}
+
 #endif

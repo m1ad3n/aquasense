@@ -1,5 +1,7 @@
-#include "../deps.h"
-#include "shader.h"
+#include "deps.h"
+#include "buffers/shader.h"
+
+using namespace as;
 
 /**
  * @brief      Functions that checks for shader compilation errors
@@ -32,7 +34,7 @@ int Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     return success;
 }
 
-Shader::Shader(Path shader_path) {
+Shader::Shader(Path shader_path) : BufferBase("Shader") {
     char* vertexCode;
     char* fragmentCode;
     std::string shaderCode = Path::GetData(shader_path.Get());
@@ -105,6 +107,14 @@ void Shader::SetInt(const char* name, int value) {
 
 void Shader::SetFloat(const char* name, float value) {
     glUniform1f(glGetUniformLocation(this->ID, name), value);
+}
+
+void Shader::SetVec2(const char* name, float values[2]) {
+    glUniform2f(glGetUniformLocation(this->ID, name), values[0], values[1]);
+}
+
+void Shader::SetVec3(const char* name, float values[3]) {
+    glUniform3f(glGetUniformLocation(this->ID, name), values[0], values[1], values[2]);
 }
 
 void Shader::SetVec4(const char* name, float values[4]) {
