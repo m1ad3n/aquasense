@@ -15,5 +15,6 @@ target_include_directories(app PUBLIC src)
 
 set_property(TARGET app PROPERTY CMAKE_CXX_STANDARD 11)
 set_property(TARGET app PROPERTY CMAKE_CXX_STANDARD_REQUIRED ON)
+set_property(TARGET app PROPERTY CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(src)

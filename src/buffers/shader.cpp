@@ -1,4 +1,7 @@
 #include "deps.h"
+#include "macros.h"
+#include <filesystem>
+#include <sstream>
 #include "buffers/shader.h"
 
 using namespace as;
@@ -34,10 +37,12 @@ int Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     return success;
 }
 
-Shader::Shader(Path shader_path) : BufferBase("Shader") {
+Shader::Shader(path shader_path) : BufferBase("Shader") {
     char* vertexCode;
     char* fragmentCode;
-    std::string shaderCode = Path::GetData(shader_path.Get());
+
+    std::string shaderCode;
+    READ_FROM_FILE(shader_path.c_str(), shaderCode);
 
     size_t pos = shaderCode.find("#shader fragment");
     std::string temp = shaderCode.substr(pos);

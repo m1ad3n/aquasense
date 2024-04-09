@@ -9,7 +9,8 @@
 #define AQUASENSE_MACROS
 
 #include <GL/glew.h>
-#include <ostream>
+#include <iostream>
+#include <fstream>
 
 #define GLClearErrors() while (glGetError() != GL_NO_ERROR)
 #define GLCall(x) GLClearErrors(); x;\
@@ -17,6 +18,12 @@
 		std::cerr << "OPENGL ERROR (" << error << ") : " << error << " " << #x << " " << __FILE__ << " " << __LINE__ << std::endl;\
 		exit(1);\
 	}
+
+
+#define READ_FROM_FILE(file_path, var) std::ifstream ss(file_path);\
+	std::stringstream sbuffer;\
+	sbuffer << ss.rdbuf();\
+	var = sbuffer.str()
 
 //
 // circle related macros

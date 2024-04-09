@@ -4,7 +4,7 @@
 
 using namespace as;
 
-VertexArray::VertexArray() {
+VertexArray::VertexArray() : BufferBase("Vertex Array") {
     GLCall(glGenVertexArrays(1, &this->ID));
     GLCall(glBindVertexArray(this->ID));
     this->Unbind();
@@ -32,7 +32,7 @@ void VertexArray::Push(unsigned int count) {
 
     GLCall(glEnableVertexAttribArray(this->layout));
     GLCall(glVertexAttribPointer(this->layout, count, GL_FLOAT, GL_FALSE, this->stride, (void*)(this->layout_offset * sizeof(float))));
-    
+
     this->layout_offset += count;
     this->layout++;
     this->Unbind();

@@ -2,7 +2,7 @@
 #define AQUASENSE_SHADER
 
 #include "buffers/buffer.h"
-#include "string_functions.h"
+#include "deps.h"
 
 namespace as
 {
@@ -11,7 +11,7 @@ class Shader : public BufferBase {
 public:
     unsigned int ID;
 
-    Shader(Path shader_path);
+    Shader(path shader_path);
     ~Shader() override {};
 
     void Bind() override;

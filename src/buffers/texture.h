@@ -2,7 +2,7 @@
 #define AQUASENSE_TEXTURE
 
 #include "buffers/buffer.h"
-#include "string_functions.h"
+#include "deps.h"
 
 namespace as
 {
@@ -11,7 +11,7 @@ class Texture : public BufferBase {
 public:
 	unsigned int ID;
 
-	Texture(Path path, unsigned int type);
+	Texture(path path, unsigned int type);
 	~Texture() override { this->Delete(); };
 
 	void Bind(unsigned int slot);

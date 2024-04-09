@@ -14,6 +14,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <filesystem>
 
 // for windows support
 #ifdef _WIN32
@@ -28,5 +29,9 @@
 #include <GLFW/glfw3.h>
 
 #include "macros.h"
+
+namespace as {
+	using std::filesystem::path;
+}
 
 #endif // AQUASENSE_DEPS

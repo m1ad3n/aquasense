@@ -9,7 +9,6 @@
 #include "buffers/buffer.h"
 #include "buffers/shader.h"
 #include "buffers/texture.h"
-#include "string_functions.h"
 #include "renderer/renderer.h"
 #include "buffers/vertex_array.h"
 
@@ -23,8 +22,8 @@
  */
 GLFWwindow* window;
 
-#define WIDTH  640
-#define HEIGHT 480
+#define WIDTH  1000
+#define HEIGHT 500
 
 /**
  * Vertex data for the triangle
@@ -121,6 +120,10 @@ static void cleanupAndExit(std::vector<as::BufferBase*> buffers) {
  */
 int main(int argc, char *argv[]) {
 
+    std::string data;
+    READ_FROM_FILE("../resources/Square.shader", data);
+    std::cout << data;
+
     if (!asInitGlfw()) return -1;
     else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
@@ -144,15 +147,15 @@ int main(int argc, char *argv[]) {
     va_object->Push(3);
     va_object->Push(2);
 
-    as::Path shader_path; shader_path << ".." << "resources" << "Square.shader";
+    as::path shader_path("../resources/Square.shader");
     as::Shader *main_shader = new as::Shader(shader_path);
 
     // first bricks texture (index 0)
-    as::Path texture_path; texture_path << ".." << "resources" << "bricks.jpg";
+    as::path texture_path("../resources/bricks.jpg");
     as::Texture* main_texture = new as::Texture(texture_path, GL_REPEAT);
 
     // second cat texture (index 1)
-    as::Path cat_texture_path; cat_texture_path << ".." << "resources" << "cat.jpg";
+    as::path cat_texture_path("../resources/cat.jpg");
     as::Texture* cat_texture = new as::Texture(cat_texture_path, GL_REPEAT);
 
     // pushing all the buffers for deletion
