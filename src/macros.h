@@ -11,6 +11,7 @@
 #include <GL/glew.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #define GLClearErrors() while (glGetError() != GL_NO_ERROR)
 #define GLCall(x) GLClearErrors(); x;\

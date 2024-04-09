@@ -59,7 +59,7 @@ static void error_callback(int error, const char* description)
 }
 
 /**
- * @brief      keyboard handler for glfw 
+ * @brief      keyboard handler for glfw
  *
  * @param      window    The window
  * @param[in]  key       The key
@@ -79,7 +79,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
  * @return     status
  */
 static bool asInitGlfw() {
-    if (!glfwInit()) return false;
+    glfwSetErrorCallback(error_callback);
+
+    if (!glfwInit()) {
+        return false;
+    }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -90,7 +94,6 @@ static bool asInitGlfw() {
 
     glfwMakeContextCurrent(window);
     glfwSetKeyCallback(window, key_callback);
-    glfwSetErrorCallback(error_callback);
 	glfwSwapInterval(1);
 
     return true;
@@ -120,10 +123,6 @@ static void cleanupAndExit(std::vector<as::BufferBase*> buffers) {
  */
 int main(int argc, char *argv[]) {
 
-    std::string data;
-    READ_FROM_FILE("../resources/Square.shader", data);
-    std::cout << data;
-
     if (!asInitGlfw()) return -1;
     else fprintf(stdout, "AQUASENSE: Window initialized\n");
 
@@ -147,15 +146,15 @@ int main(int argc, char *argv[]) {
     va_object->Push(3);
     va_object->Push(2);
 
-    as::path shader_path("../resources/Square.shader");
+    const char* shader_path = "../resources/Square.shader";
     as::Shader *main_shader = new as::Shader(shader_path);
 
     // first bricks texture (index 0)
-    as::path texture_path("../resources/bricks.jpg");
+    const char* texture_path = "../resources/bricks.jpg";
     as::Texture* main_texture = new as::Texture(texture_path, GL_REPEAT);
 
     // second cat texture (index 1)
-    as::path cat_texture_path("../resources/cat.jpg");
+    const char* cat_texture_path = "../resources/cat.jpg";
     as::Texture* cat_texture = new as::Texture(cat_texture_path, GL_REPEAT);
 
     // pushing all the buffers for deletion

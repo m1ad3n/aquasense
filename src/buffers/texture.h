@@ -11,7 +11,7 @@ class Texture : public BufferBase {
 public:
 	unsigned int ID;
 
-	Texture(path path, unsigned int type);
+	Texture(const char* path, unsigned int type);
 	~Texture() override { this->Delete(); };
 
 	void Bind(unsigned int slot);

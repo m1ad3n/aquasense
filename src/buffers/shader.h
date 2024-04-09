@@ -11,7 +11,7 @@ class Shader : public BufferBase {
 public:
     unsigned int ID;
 
-    Shader(path shader_path);
+    Shader(const char* shader_path);
     ~Shader() override {};
 
     void Bind() override;

@@ -4,9 +4,9 @@
 
 using namespace as;
 
-Texture::Texture(path path, unsigned int type) : BufferBase("Texture") {
+Texture::Texture(const char* path, unsigned int type) : BufferBase("Texture") {
 	stbi_set_flip_vertically_on_load(1);
-	this->bytes = stbi_load(path.c_str(), &this->width, &this->height, &this->bits_per_pixel, 4);
+	this->bytes = stbi_load(path, &this->width, &this->height, &this->bits_per_pixel, 4);
 
 	GLCall(glGenTextures(1, &this->ID));
 	GLCall(glBindTexture(GL_TEXTURE_2D, this->ID));

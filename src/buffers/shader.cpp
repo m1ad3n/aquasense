@@ -1,6 +1,5 @@
 #include "deps.h"
 #include "macros.h"
-#include <filesystem>
 #include <sstream>
 #include "buffers/shader.h"
 
@@ -37,12 +36,13 @@ int Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     return success;
 }
 
-Shader::Shader(path shader_path) : BufferBase("Shader") {
+Shader::Shader(const char* shader_path) : BufferBase("Shader") {
+    std::cout << "hello";
     char* vertexCode;
     char* fragmentCode;
 
     std::string shaderCode;
-    READ_FROM_FILE(shader_path.c_str(), shaderCode);
+    READ_FROM_FILE(shader_path, shaderCode);
 
     size_t pos = shaderCode.find("#shader fragment");
     std::string temp = shaderCode.substr(pos);
@@ -58,7 +58,7 @@ Shader::Shader(path shader_path) : BufferBase("Shader") {
     fragmentCode++;
 
     unsigned int vertex, fragment;
-    
+
     // Vertex shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
     GLCall(glShaderSource(vertex, 1, &vertexCode, NULL));
@@ -66,7 +66,7 @@ Shader::Shader(path shader_path) : BufferBase("Shader") {
     if (checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
         glDeleteProgram(vertex);
     }
-    
+
     // Fragment shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     GLCall(glShaderSource(fragment, 1, &fragmentCode, NULL));
@@ -75,7 +75,7 @@ Shader::Shader(path shader_path) : BufferBase("Shader") {
         glDeleteProgram(vertex);
         glDeleteProgram(fragment);
     }
-    
+
     // Shader program
     this->ID = glCreateProgram();
     GLCall(glAttachShader(this->ID, vertex));
