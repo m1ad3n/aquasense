@@ -1,7 +1,7 @@
 /**
   * @author Mladen Stanimirovic
   * @file aquasense.c
-  * @brief Main C source file for this project
+  * @brief Main C++ source file for this project
   */
 
 #include "deps.h"
@@ -12,38 +12,30 @@
 #include "renderer/renderer.h"
 #include "buffers/vertex_array.h"
 
-#include <glm/glm.hpp>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
 /**
  * Window ptr
  */
 GLFWwindow* window;
 
-#define WIDTH  1000
-#define HEIGHT 500
+#define WIDTH  700
+#define HEIGHT 700
+
+int texture_pos = 0;
 
 /**
  * Vertex data for the triangle
  */
 float vertecies[] = {
-    // CORDS                // TEXTURE CORDS
-    -0.5f, 0.0f,  0.5f,     0.0f, 0.0f,
-    -0.5f, 0.0f, -0.5f,     5.0f, 0.0f,
-     0.5f, 0.0f, -0.5f,     0.0f, 0.0f,
-     0.5f, 0.0f,  0.5f,     5.0f, 0.0f,
-     0.0f, 0.8f,  0.0f,     2.5f, 5.0f
+    // VERTEX POINTS                            // TEXTURE CORDINATES
+            0.0f,           0.0f, 0.0f,         0.0f, 0.0f,
+    (float)WIDTH,           0.0f, 0.0f,         1.0f, 0.0f,
+    (float)WIDTH,  (float)HEIGHT, 0.0f,         1.0f, 1.0f,
+            0.0f,  (float)HEIGHT, 0.0f,         0.0f, 1.0f
 };
 
 unsigned int indicies[] = {
-    0,1,2,
-    0,2,3,
-    0,1,4,
-    1,2,4,
-    2,3,4,
-    3,0,4
+    0, 1, 2,
+    0, 2, 3
 };
 
 /**
@@ -72,8 +64,11 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     else if (key == GLFW_KEY_ENTER && action == GLFW_REPEAT)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    else if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
+        (texture_pos > 0) ? texture_pos-- : texture_pos = texture_pos;
+    else if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS)
+        (texture_pos < 2 - 1) ? texture_pos++ : texture_pos = texture_pos;
 }
-
 /**
  * @brief      Initialize GLFW window
  * @return     status
@@ -140,29 +135,28 @@ int main(int argc, char *argv[]) {
     // creating a vertex array and binding the buffers to it
     as::VertexArray* va_object = new as::VertexArray();
     va_object->AddVertexBuffer(vertecies, sizeof(vertecies), 5);
-    va_object->AddIndexBuffer(indicies, 18);
+    va_object->AddIndexBuffer(indicies, 6);
 
     // vertex pointer layout
     va_object->Push(3);
     va_object->Push(2);
 
-    const char* shader_path = "../resources/Square.shader";
+    const char* shader_path = "../resources/AShader";
     as::Shader *main_shader = new as::Shader(shader_path);
 
     // first bricks texture (index 0)
-    const char* texture_path = "../resources/bricks.jpg";
-    as::Texture* main_texture = new as::Texture(texture_path, GL_REPEAT);
+    const char* full_tanks_texture_path = "../resources/full.jpeg";
+    as::Texture* full_tanks_texture = new as::Texture(full_tanks_texture_path, GL_REPEAT);
 
-    // second cat texture (index 1)
-    const char* cat_texture_path = "../resources/cat.jpg";
-    as::Texture* cat_texture = new as::Texture(cat_texture_path, GL_REPEAT);
+    const char* empty_tanks_texture_path = "../resources/empty.jpeg";
+    as::Texture* empty_tanks_texture = new as::Texture(empty_tanks_texture_path, GL_REPEAT);
 
     // pushing all the buffers for deletion
     std::vector<as::BufferBase*> buffers;
     buffers.push_back(va_object);
     buffers.push_back(main_shader);
-    buffers.push_back(main_texture);
-    buffers.push_back(cat_texture);
+    buffers.push_back(empty_tanks_texture);
+    buffers.push_back(full_tanks_texture);
 
     // unbind everything
     glBindVertexArray(0);
@@ -170,60 +164,30 @@ int main(int argc, char *argv[]) {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 model = glm::mat4(1.0f);
-    glm::mat4 result;
-
-    projection = glm::perspective(glm::radians(45.0f), (float)WIDTH/(float)HEIGHT, 0.1f, 100.0f);
-
-    float rotation = 0.1f;
-    double prev_time = glfwGetTime(), current_time;
+    glm::mat4 projection = glm::ortho(0.0f, (float)WIDTH, 0.0f, (float)HEIGHT);
+    double prev_time = glfwGetTime();
 
     // main application loop
     while (!glfwWindowShouldClose(window))
     {
-        as::Renderer::Clear(0.0f, 0.0f, 0.0f, 1.0f);
-
-        //
-        // first pyramid
-        //
-
-        // math for object rotation
-        current_time = glfwGetTime();
-        if (current_time - prev_time >= ((float)1 / 60)) {
-            prev_time = current_time;
-            (rotation >= 360.0f) ? rotation = 0.5 : rotation += 0.5f;
-        }
-        view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.4f, -3.0f));
-        model = glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
-        result = projection * view * model;
+        as::Renderer::Clear(1.0f, 1.0f, 1.0f, 1.0f);
 
         // bind the shader and set all the uniforms
         main_shader->Bind();
-        main_shader->SetMat4("u_MVP", glm::value_ptr(result));
+        main_shader->SetMat4("u_MVP", glm::value_ptr(projection));
 
         // bind the textures
-        main_texture->Bind(0);
-        main_shader->SetInt("tex0", 0);
+        full_tanks_texture->Bind(0);
+        empty_tanks_texture->Bind(1);
 
-        as::Renderer::Draw(va_object, va_object->GetIndicies(), main_shader);
+        // double current_time = glfwGetTime();
+        // if (current_time - prev_time >= (double)2) {
+        //     prev_time = current_time;
+        //     (texture_pos == 0) ? texture_pos++ : texture_pos--;
+        // }
 
-        //
-        // second pyramid
-        //
-        model = glm::mat4(1.0f);
-        view = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, -0.4f, -5.1f));
-        result = projection * view * model;
-
-        // shader and matrix values for second pyramid
-        main_shader->Bind();
-        main_shader->SetMat4("u_MVP", glm::value_ptr(result));
-
-        cat_texture->Bind(1);
-        main_shader->SetInt("tex0", 1);
-
-        as::Renderer::Draw(va_object, va_object->GetIndicies(), main_shader);
+        main_shader->SetInt("tex0", texture_pos);
+        as::Renderer::Draw(va_object, GL_TRIANGLES, main_shader);
 
         // glfw swap front and back buffers
         glfwSwapBuffers(window);

@@ -13,6 +13,16 @@ Buffer::Buffer(unsigned int target, void* data, unsigned int size) : BufferBase(
 	this->Unbind();
 }
 
+Buffer::Buffer(unsigned int target, void* data, unsigned int size, long draw_method) {
+	this->TARGET = target;
+	this->m_data = data;
+	this->m_size = size;
+	glGenBuffers(1, &this->ID);
+    glBindBuffer(this->TARGET, this->ID);
+    glBufferData(this->TARGET, size, data, draw_method);
+	this->Unbind();
+}
+
 BufferBase::~BufferBase()
 {
 	std::cout << m_type <<  " buffer [" << std::hex << this << "] destroyed" << std::endl;

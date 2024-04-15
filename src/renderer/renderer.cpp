@@ -9,9 +9,12 @@ void Renderer::Clear(float red, float green, float blue, float alpha) {
     GLCall(glClearColor(red, green, blue, alpha));
 }
 
-void Renderer::Draw(VertexArray* vao, int indicies_to_draw, Shader* shader)
+void Renderer::Draw(VertexArray* vao, unsigned int method, Shader* shader, int count)
 {
     shader->Bind();
     vao->Bind(true);
-    GLCall(glDrawElements(GL_TRIANGLES, indicies_to_draw, GL_UNSIGNED_INT, nullptr));
+
+    (count == 0) ? count = vao->GetIndicies() : count = count;
+
+    GLCall(glDrawElements(method, count, GL_UNSIGNED_INT, nullptr));
 }

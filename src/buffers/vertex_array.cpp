@@ -19,6 +19,13 @@ void VertexArray::AddVertexBuffer(void* data, unsigned int size, unsigned int st
     this->Unbind();
 }
 
+void VertexArray::AddVertexBuffer(void* data, unsigned int size, unsigned int stride, long draw_method) {
+    this->Bind();
+    this->vbo = new VertexBuffer(GL_ARRAY_BUFFER, data, size, draw_method);
+    this->stride = (stride * sizeof(float));
+    this->Unbind();
+}
+
 void VertexArray::AddIndexBuffer(void* data, int count) {
     this->Bind();
     this->ibo = new IndexBuffer(GL_ELEMENT_ARRAY_BUFFER, data, count * sizeof(unsigned int));

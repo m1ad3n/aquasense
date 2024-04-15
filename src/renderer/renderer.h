@@ -9,7 +9,7 @@ namespace as
 
 class Renderer {
 public:
-    static void Draw(VertexArray* vao, int indicies_to_draw, Shader* shader);
+    static void Draw(VertexArray* vao, unsigned int method, Shader* shader, int count = 0);
     static void Clear(float red, float green, float blue, float alpha);
 };
 

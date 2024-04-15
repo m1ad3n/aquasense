@@ -37,7 +37,6 @@ int Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
 }
 
 Shader::Shader(const char* shader_path) : BufferBase("Shader") {
-    std::cout << "hello";
     char* vertexCode;
     char* fragmentCode;
 

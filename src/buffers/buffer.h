@@ -32,6 +32,7 @@ public:
     unsigned int TARGET;
 
     Buffer(unsigned int target, void* data, unsigned int size);
+    Buffer(unsigned int target, void* data, unsigned int size, long draw_method);
     ~Buffer() override;
 
     void Bind() override;

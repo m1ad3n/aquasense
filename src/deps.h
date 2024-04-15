@@ -17,7 +17,8 @@
 #include <vector>
 #include <string>
 #include <cstring>
-
+#include <map>
+#include <memory>
 
 // opengl (must be included before any other opengl library's)
 #include <GL/glew.h>
@@ -27,5 +28,11 @@
 #include <GLFW/glfw3.h>
 
 #include "macros.h"
+
+// glm
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 #endif // AQUASENSE_DEPS

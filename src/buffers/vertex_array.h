@@ -15,6 +15,7 @@ public:
     ~VertexArray() override;
 
     void AddVertexBuffer(void* data, unsigned int size, unsigned int stride);
+    void AddVertexBuffer(void* data, unsigned int size, unsigned int stride, long draw_method);
     void AddIndexBuffer(void* data, int count);
 
     void Push(unsigned int count);
@@ -22,6 +23,8 @@ public:
 
     void Bind(bool bind_ibo);
     void Bind() override { this->Bind(false); }
+    void BindVBO() { this->vbo->Bind(); }
+
     void Unbind() override;
     void Delete() override;
 
