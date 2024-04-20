@@ -18,8 +18,16 @@ void main() {
 out vec4 FragColor;
 
 in vec2 texCords;
-uniform sampler2D tex0;
+uniform sampler2D actTexIndex;
 
 void main() {
-	FragColor = texture(tex0, texCords);
+	vec3 tt = texture(actTexIndex, texCords).rgb;
+	if (length(tt) == 0.0)
+	{
+		FragColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	}
+	else
+	{
+		FragColor = texture(actTexIndex, texCords);
+	}
 }

@@ -180,13 +180,13 @@ int main(int argc, char *argv[]) {
         full_tanks_texture->Bind(0);
         empty_tanks_texture->Bind(1);
 
-        // double current_time = glfwGetTime();
-        // if (current_time - prev_time >= (double)2) {
-        //     prev_time = current_time;
-        //     (texture_pos == 0) ? texture_pos++ : texture_pos--;
-        // }
+        double current_time = glfwGetTime();
+        if (current_time - prev_time >= (double)2) {
+            prev_time = current_time;
+            (texture_pos == 0) ? texture_pos++ : texture_pos--;
+        }
 
-        main_shader->SetInt("tex0", texture_pos);
+        main_shader->SetInt("actTexIndex", texture_pos);
         as::Renderer::Draw(va_object, GL_TRIANGLES, main_shader);
 
         // glfw swap front and back buffers
