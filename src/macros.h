@@ -26,10 +26,5 @@
 	sbuffer << ss.rdbuf();\
 	var = sbuffer.str()
 
-//
-// circle related macros
-//
-#define PI 3.141592
-#define CIRCLE_AREA(r) (PI*(r*r))
 
 #endif

@@ -14,11 +14,10 @@ public:
     VertexArray();
     ~VertexArray() override;
 
-    void AddVertexBuffer(void* data, unsigned int size, unsigned int stride);
-    void AddVertexBuffer(void* data, unsigned int size, unsigned int stride, long draw_method);
-    void AddIndexBuffer(void* data, int count);
+    void AddVertexBuffer(VertexBuffer* vbo);
+    void AddIndexBuffer(IndexBuffer* ibo);
 
-    void Push(unsigned int count);
+    void Push(unsigned int count, void* offset);
     int GetIndicies();
 
     void Bind(bool bind_ibo);
@@ -32,10 +31,7 @@ private:
     VertexBuffer* vbo;
     IndexBuffer* ibo;
 
-    int indicies = 0;
-    unsigned int stride = 0;
     unsigned int layout = 0;
-    unsigned int layout_offset = 0;
 };
 
 }

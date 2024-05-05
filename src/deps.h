@@ -17,8 +17,8 @@
 #include <vector>
 #include <string>
 #include <cstring>
-#include <map>
-#include <memory>
+#include <thread>
+#include <chrono>
 
 // opengl (must be included before any other opengl library's)
 #include <GL/glew.h>

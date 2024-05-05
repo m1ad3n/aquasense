@@ -7,56 +7,44 @@ using namespace as;
 VertexArray::VertexArray() : BufferBase("Vertex Array") {
     GLCall(glGenVertexArrays(1, &this->ID));
     GLCall(glBindVertexArray(this->ID));
-    this->Unbind();
-    this->layout_offset = 0;
     this->layout = 0;
 }
 
-void VertexArray::AddVertexBuffer(void* data, unsigned int size, unsigned int stride) {
+void VertexArray::AddVertexBuffer(VertexBuffer* vbo) {
     this->Bind();
-    this->vbo = new VertexBuffer(GL_ARRAY_BUFFER, data, size);
-    this->stride = (stride * sizeof(float));
+    this->vbo = vbo;
     this->Unbind();
 }
 
-void VertexArray::AddVertexBuffer(void* data, unsigned int size, unsigned int stride, long draw_method) {
+void VertexArray::AddIndexBuffer(IndexBuffer* ibo) {
     this->Bind();
-    this->vbo = new VertexBuffer(GL_ARRAY_BUFFER, data, size, draw_method);
-    this->stride = (stride * sizeof(float));
+    this->ibo = ibo;
     this->Unbind();
 }
 
-void VertexArray::AddIndexBuffer(void* data, int count) {
+void VertexArray::Push(unsigned int count, void* offset) {
     this->Bind();
-    this->ibo = new IndexBuffer(GL_ELEMENT_ARRAY_BUFFER, data, count * sizeof(unsigned int));
-    this->indicies = count;
-    this->Unbind();
-}
-
-void VertexArray::Push(unsigned int count) {
-    this->Bind(true);
     this->vbo->Bind();
 
     GLCall(glEnableVertexAttribArray(this->layout));
-    GLCall(glVertexAttribPointer(this->layout, count, GL_FLOAT, GL_FALSE, this->stride, (void*)(this->layout_offset * sizeof(float))));
+    GLCall(glVertexAttribPointer(this->layout, count, GL_FLOAT, GL_FALSE, sizeof(Vertex), offset));
 
-    this->layout_offset += count;
     this->layout++;
     this->Unbind();
 }
 
 VertexArray::~VertexArray() {
     this->Delete();
-    delete vbo;
-    delete ibo;
+    if (vbo) delete vbo;
+    if (ibo) delete ibo;
 }
 
 void VertexArray::Delete() {
-    glDeleteVertexArrays(1, &this->ID);
+    GLCall(glDeleteVertexArrays(1, &this->ID));
 }
 
 void VertexArray::Bind(bool bind_ibo) {
-    glBindVertexArray(this->ID);
+    GLCall(glBindVertexArray(this->ID));
     if (bind_ibo) this->ibo->Bind();
 }
 
@@ -65,5 +53,5 @@ void VertexArray::Unbind() {
 }
 
 int VertexArray::GetIndicies() {
-    return this->indicies;
+    return this->ibo->GetIndicies();
 }

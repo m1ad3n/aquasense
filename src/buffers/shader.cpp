@@ -36,31 +36,12 @@ int Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     return success;
 }
 
-Shader::Shader(const char* shader_path) : BufferBase("Shader") {
-    char* vertexCode;
-    char* fragmentCode;
-
-    std::string shaderCode;
-    READ_FROM_FILE(shader_path, shaderCode);
-
-    size_t pos = shaderCode.find("#shader fragment");
-    std::string temp = shaderCode.substr(pos);
-    fragmentCode = &temp.front();
-    shaderCode.resize(pos);
-    vertexCode = &shaderCode.front();
-
-    for (int i = 0 ; i < 15; i++) {
-        vertexCode++;
-        fragmentCode++;
-    }
-    fragmentCode++;
-    fragmentCode++;
-
+Shader::Shader(const char* vertex_code, const char* fragment_code) : BufferBase("Shader") {
     unsigned int vertex, fragment;
 
     // Vertex shader
     vertex = glCreateShader(GL_VERTEX_SHADER);
-    GLCall(glShaderSource(vertex, 1, &vertexCode, NULL));
+    GLCall(glShaderSource(vertex, 1, &vertex_code, NULL));
     GLCall(glCompileShader(vertex));
     if (checkCompileErrors(vertex, "VERTEX") == GL_FALSE) {
         glDeleteProgram(vertex);
@@ -68,7 +49,7 @@ Shader::Shader(const char* shader_path) : BufferBase("Shader") {
 
     // Fragment shader
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    GLCall(glShaderSource(fragment, 1, &fragmentCode, NULL));
+    GLCall(glShaderSource(fragment, 1, &fragment_code, NULL));
     GLCall(glCompileShader(fragment));
     if (checkCompileErrors(fragment, "FRAGMENT") == GL_FALSE) {
         glDeleteProgram(vertex);

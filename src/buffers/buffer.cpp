@@ -1,25 +1,19 @@
-#include "buffers/buffer.h"
+#include "buffer.h"
 #include "deps.h"
 
 using namespace as;
 
-Buffer::Buffer(unsigned int target, void* data, unsigned int size) : BufferBase((target == GL_ARRAY_BUFFER) ? "Vertex" : "Index") {
-	this->TARGET = target;
-	this->m_data = data;
-	this->m_size = size;
-	glGenBuffers(1, &this->ID);
-    glBindBuffer(this->TARGET, this->ID);
-    glBufferData(this->TARGET, size, data, GL_STATIC_DRAW);
+VertexBuffer::VertexBuffer(std::vector<Vertex>& data) : BufferBase("Vertex") {
+	GLCall(glGenBuffers(1, &this->ID));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, this->ID));
+    GLCall(glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(Vertex), data.data(), GL_STATIC_DRAW));
 	this->Unbind();
 }
 
-Buffer::Buffer(unsigned int target, void* data, unsigned int size, long draw_method) {
-	this->TARGET = target;
-	this->m_data = data;
-	this->m_size = size;
-	glGenBuffers(1, &this->ID);
-    glBindBuffer(this->TARGET, this->ID);
-    glBufferData(this->TARGET, size, data, draw_method);
+VertexBuffer::VertexBuffer(std::vector<Vertex>& data, long draw_method) : BufferBase("Vertex") {
+	GLCall(glGenBuffers(1, &this->ID));
+    GLCall(glBindBuffer(GL_ARRAY_BUFFER, this->ID));
+    GLCall(glBufferData(GL_ARRAY_BUFFER, data.size() * sizeof(Vertex), data.data(), draw_method));
 	this->Unbind();
 }
 
@@ -28,26 +22,55 @@ BufferBase::~BufferBase()
 	std::cout << m_type <<  " buffer [" << std::hex << this << "] destroyed" << std::endl;
 }
 
-Buffer::~Buffer() {
+VertexBuffer::~VertexBuffer() {
 	this->Delete();
 }
 
-void* Buffer::GetData() {
-	return this->m_data;
+void VertexBuffer::Bind() {
+	glBindBuffer(GL_ARRAY_BUFFER, this->ID);
 }
 
-unsigned int Buffer::GetSize() {
-	return this->m_size;
+void VertexBuffer::Unbind() {
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Buffer::Bind() {
-	glBindBuffer(this->TARGET, this->ID);
-}
-
-void Buffer::Unbind() {
-	glBindBuffer(this->TARGET, 0);
-}
-
-void Buffer::Delete() {
+void VertexBuffer::Delete() {
 	glDeleteBuffers(1, &this->ID);
+}
+
+
+IndexBuffer::IndexBuffer(std::vector<unsigned int>& data) : BufferBase("Index") {
+	GLCall(glGenBuffers(1, &this->ID));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ID));
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size() * sizeof(unsigned int), data.data(), GL_STATIC_DRAW));
+	this->Unbind();
+	this->indicies = data.size();
+}
+
+IndexBuffer::IndexBuffer(std::vector<unsigned int>& data, long draw_method) : BufferBase("Index") {
+	GLCall(glGenBuffers(1, &this->ID));
+    GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ID));
+    GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size() * sizeof(unsigned int), data.data(), draw_method));
+	this->Unbind();
+	this->indicies = data.size();
+}
+
+IndexBuffer::~IndexBuffer() {
+	this->Delete();
+}
+
+void IndexBuffer::Bind() {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ID);
+}
+
+void IndexBuffer::Unbind() {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void IndexBuffer::Delete() {
+	glDeleteBuffers(1, &this->ID);
+}
+
+int IndexBuffer::GetIndicies() {
+	return this->indicies;
 }
