@@ -22,6 +22,22 @@ Texture::Texture(const char* path, unsigned int type) : BufferBase("Texture") {
 		stbi_image_free(this->bytes);
 }
 
+Texture::Texture(unsigned char* bytes, unsigned int type, int width, int height) : BufferBase("Texture") {
+	this->width = width;
+	this->height = height;
+	this->bytes = bytes;
+
+	GLCall(glGenTextures(1, &this->ID));
+	GLCall(glBindTexture(GL_TEXTURE_2D, this->ID));
+
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	this->ChangeTypeParameter(type);
+
+	GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, this->width, this->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, this->bytes));
+	GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+}
+
 
 void Texture::Bind(unsigned int slot) {
 	GLCall(glActiveTexture(GL_TEXTURE0 + slot));

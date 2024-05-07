@@ -17,6 +17,7 @@ public:
     static void Quad(VertexArray* vao, int indicies_count, Shader* shader_object, Texture* texture_object, const char* texture_uniform = "textureIndex", int texture_index = 0);
 
     static void Background(int width, int height, Shader* shader, Texture* texture);
+    static void DrawFrom(VertexArray* vao, unsigned int method, int index_from, int count);
 };
 
 }

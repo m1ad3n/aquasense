@@ -12,6 +12,7 @@
 #include "buffers/texture.h"
 #include "renderer/renderer.h"
 #include "buffers/vertex_array.h"
+#include "font.h"
 
 /**
  * Window ptr
@@ -139,6 +140,7 @@ static void append_animation_vertices(std::vector<as::Vertex>& vertices, std::ve
  * @param[in]  yr           y cordinate radius
  */
 static void append_animation(std::vector<as::Vertex>& vertices, std::vector<unsigned int>& indicies, size_t iterations, float increasment, float pos_x, float pos_y, float xr, float yr) {
+    int start_index = indicies.size();
     for (int y = 0; y < iterations; y++)
     {
         /**
@@ -164,10 +166,19 @@ static void append_animation(std::vector<as::Vertex>& vertices, std::vector<unsi
         }
 
         /* new indicies for the circle */
-        for (int i = size; i < vertices.size(); i++)
+        for (int i = size; i < vertices.size() - 1801; i++)
         {
             indicies.push_back(i);
             indicies.push_back(i + 1);
+            indicies.push_back(vertices.size() - 1800);
+        }
+
+
+        for (int i = vertices.size() - 1799; i < vertices.size() - 1; i++)
+        {
+            indicies.push_back(i);
+            indicies.push_back(i + 1);
+            indicies.push_back(start_index);
         }
     }
 }
@@ -285,9 +296,9 @@ int main(int argc, char *argv[]) {
      * water variables (speed, etc.)
      */
     int start_index = indicies.size();
-    int water_level = start_index;
+    int water_level = 0;
     bool water_rising = true;
-    unsigned int water_level_update = 10; // milliseconds
+    unsigned int water_level_update = 40; // milliseconds
 
     /**
      * generate circles for the animation purpse
@@ -307,7 +318,6 @@ int main(int argc, char *argv[]) {
     va_object->Push(2, (void*)offsetof(as::Vertex, texCoords));
 
     /* generate a shader object */
-    const char* shader_path = "../resources/AShader";
     as::Shader* main_shader = new as::Shader(VERTEX_SHADER_CODE, FRAGMENT_SHADER_CODE);
 
     /* pushing all the buffers for deletion */
@@ -336,13 +346,15 @@ int main(int argc, char *argv[]) {
 
         /* check if the water should be rising or not */
         if (water_level >= indicies.size() && water_rising) water_rising = false;
-        else if (water_level <= start_index) water_rising = true;
+        else if (water_level <= 0) water_rising = true;
 
         /* 7180 is the indicies count for one circle */
-        (water_rising) ? water_level += 7180 : water_level -= 7180;
+        (water_rising) ? water_level += 10738 : water_level -= 10738;
 
         /* main_shader->SetInt("textureIndex", 0); */
-        as::Renderer::Draw(va_object, GL_LINES, main_shader, water_level);
+        as::Renderer::Draw(va_object, GL_LINES, main_shader, start_index);
+
+        as::Renderer::DrawFrom(va_object, GL_TRIANGLES, start_index + 1, water_level);
 
         /* reduce cpu usage */
         std::this_thread::sleep_for (std::chrono::milliseconds(water_level_update));

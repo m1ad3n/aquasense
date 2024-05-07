@@ -1,5 +1,6 @@
 #include "renderer/renderer.h"
 #include "deps.h"
+#include "renderer.h"
 
 using namespace as;
 
@@ -17,6 +18,12 @@ void Renderer::Draw(VertexArray* vao, unsigned int method, Shader* shader, int c
         count = vao->GetIndicies();
 
     GLCall(glDrawElements(method, count, GL_UNSIGNED_INT, nullptr));
+}
+
+void Renderer::DrawFrom(VertexArray* vao, unsigned int method, int index_from, int count)
+{
+    vao->Bind(true);
+    GLCall(glDrawRangeElements(method, index_from, vao->GetIndicies(), count, GL_UNSIGNED_INT, nullptr));
 }
 
 void Renderer::Quad(VertexArray* vao, Shader* shader_object, Texture* texture_object, const char* texture_uniform, int texture_index)

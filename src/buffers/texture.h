@@ -12,6 +12,7 @@ public:
 	unsigned int ID;
 
 	Texture(const char* path, unsigned int type);
+	Texture(unsigned char* bytes, unsigned int type, int width, int height);
 	~Texture() override { this->Delete(); };
 
 	void Bind(unsigned int slot);
